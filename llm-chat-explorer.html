@@ -69,6 +69,19 @@
       align-items: center;
       height: 100vh;
       padding: 20px;
+      position: relative;
+    }
+    
+    /* Dark mode toggle on landing page */
+    #landing-dark-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-color);
     }
     
     /* Upload area: smaller with border and centered */
@@ -262,6 +275,8 @@
       overflow-y: auto;
       flex-grow: 1;
       padding: 10px;
+      max-height: calc(100vh - 250px);
+      scrollbar-width: thin;
     }
     
     .chat-list li {
@@ -664,6 +679,8 @@
       overflow-y: auto;
       flex-grow: 1;
       padding: 10px;
+      max-height: calc(100vh - 250px);
+      scrollbar-width: thin;
     }
 
     .project-item {
@@ -702,6 +719,28 @@
       color: var(--text-light);
       margin-top: 4px;
     }
+
+    /* Scrollbar styling for webkit browsers */
+    .chat-list::-webkit-scrollbar,
+    .project-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-list::-webkit-scrollbar-track,
+    .project-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-list::-webkit-scrollbar-thumb,
+    .project-list::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    .chat-list::-webkit-scrollbar-thumb:hover,
+    .project-list::-webkit-scrollbar-thumb:hover {
+      background: var(--text-light);
+    }
 </style>
 </head>
 <body>
@@ -712,6 +751,15 @@
 
   <!-- Upload wrapper to center the upload area -->
   <div id="upload-wrapper">
+    <!-- Dark mode toggle for landing page -->
+    <div id="landing-dark-toggle">
+      <span>Dark mode:</span>
+      <label class="switch">
+        <input type="checkbox" id="landing-dark-toggle-input">
+        <span class="slider dark-slider"></span>
+      </label>
+    </div>
+    
     <div id="upload-area">
       <h1 class="upload-title"><i class="fas fa-comments"></i> <span>LLM Chat Explorer</span></h1>
       <p class="small-text">
@@ -773,6 +821,7 @@
         <div class="search-container">
           <i class="fas fa-search search-icon"></i>
           <input type="text" id="project-search" placeholder="Search projects...">
+          <span id="clear-project-search" class="clear-search">&times;</span>
         </div>
         <ul id="project-list" class="project-list">
           <!-- Projects will be inserted here -->
@@ -848,15 +897,22 @@
       conversations.reverse();
       }
 
-      // Save the total globally
-      window.totalChats = conversations.length;
+      // Save the original total globally for reference
+      window.originalTotalChats = conversations.length;
 
       let chatListHTML = '';
       const chatData = {};
+      let displayedChatIndex = 0;
 
-      conversations.forEach((chat, index) => {
+      conversations.forEach((chat, originalIndex) => {
+      // Skip chats with empty names - don't consider chats having "name": ""
+      if ((chat.title === "" || chat.title === null || chat.title === undefined) && 
+          (chat.name === "" || chat.name === null || chat.name === undefined)) {
+        return; // Skip this chat
+      }
+      
       // Use 'title' (ChatGPT) or 'name' (Claude) for the title
-      let title = chat.title || chat.name || `Chat ${index + 1}`;
+      let title = chat.title || chat.name || `Chat ${displayedChatIndex + 1}`;
       let messages = [];
       let service = "ChatGPT"; // default
       let uuid = null;
@@ -917,8 +973,8 @@
       if (createdTime) {
         displayTitle += ` <span class='chat-date'>${formatDate(createdTime)}</span>`;
       }
-      chatListHTML += `<li data-id="${index}" title="${title}">${displayTitle}</li>`;
-      chatData[index] = {
+      chatListHTML += `<li data-id="${displayedChatIndex}" title="${title}">${displayTitle}</li>`;
+      chatData[displayedChatIndex] = {
         title: title,
         messages: messages,
         created_time: createdTime ? formatDate(createdTime) : "",
@@ -926,8 +982,12 @@
         uuid: uuid,
         conversation_id: conversation_id
       };
+      displayedChatIndex++;
       });
 
+      // Update the total chats count to reflect displayed chats
+      window.totalChats = displayedChatIndex;
+      
       document.getElementById("chat-list").innerHTML = chatListHTML;
       Array.from(document.getElementById("chat-list").children).forEach(li => {
       li.setAttribute("data-original", li.innerHTML);
@@ -1125,7 +1185,7 @@
       }
     
       // Update the chat counter if defined
-      document.getElementById("chat-counter-text").textContent = conversations.length + " chats total";
+      document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
 
       attachChatListClickHandler(chatData);
     }
@@ -1300,6 +1360,11 @@
       
       projectList.innerHTML = html;
       
+      // Store original HTML for search functionality
+      Array.from(projectList.children).forEach(li => {
+        li.setAttribute("data-original", li.innerHTML);
+      });
+      
       // Add click handlers for projects
       projectList.addEventListener('click', (e) => {
         const projectItem = e.target.closest('.project-item');
@@ -1312,6 +1377,9 @@
         const projectId = projectItem.getAttribute('data-project-id');
         displayProject(window.allProjects[projectId]);
       });
+      
+      // Add project search functionality
+      setupProjectSearch();
     }
 
     // Display project details in the main content area
@@ -1359,6 +1427,56 @@
       chatContent.innerHTML = html;
     }
 
+    // Setup project search functionality
+    function setupProjectSearch() {
+      const projectSearchBar = document.getElementById("project-search");
+      const clearProjectSearch = document.getElementById("clear-project-search");
+      
+      projectSearchBar.addEventListener("input", () => {
+        const searchTerm = projectSearchBar.value.toLowerCase().trim();
+        clearProjectSearch.style.display = searchTerm !== "" ? "block" : "none";
+        const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
+        
+        Array.from(document.getElementById("project-list").children).forEach(li => {
+          const projectId = li.getAttribute("data-project-id");
+          if (projectId !== null && window.allProjects && window.allProjects[projectId]) {
+            const project = window.allProjects[projectId];
+            const nameText = (project.name || '').toLowerCase();
+            const descriptionText = (project.description || '').toLowerCase();
+            
+            // Check if search terms match name or description
+            const matches = words.every(word => 
+              nameText.includes(word) || descriptionText.includes(word)
+            );
+            
+            li.style.display = matches ? "" : "none";
+            
+            if (matches && words.length > 0) {
+              // Highlight matching terms
+              let newHTML = li.getAttribute("data-original");
+              words.forEach(word => {
+                const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')})`, 'gi');
+                newHTML = newHTML.replace(regex, `<span class="highlight">$1</span>`);
+              });
+              li.innerHTML = newHTML;
+            } else {
+              li.innerHTML = li.getAttribute("data-original");
+            }
+          }
+        });
+      });
+      
+      clearProjectSearch.addEventListener("click", () => {
+        projectSearchBar.value = "";
+        clearProjectSearch.style.display = "none";
+        Array.from(document.getElementById("project-list").children).forEach(li => {
+          li.style.display = "";
+          li.innerHTML = li.getAttribute("data-original");
+        });
+        projectSearchBar.focus();
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const uploadArea = document.getElementById('upload-area');
       const jsonFileInput = document.getElementById('json-file');
@@ -1404,9 +1522,15 @@
       if (e.target.checked) {
         document.body.classList.add('dark-mode');
         localStorage.setItem('darkMode', 'true');
+        // Sync with landing page toggle if it exists
+        const landingToggle = document.getElementById("landing-dark-toggle-input");
+        if (landingToggle) landingToggle.checked = true;
       } else {
         document.body.classList.remove('dark-mode');
         localStorage.setItem('darkMode', 'false');
+        // Sync with landing page toggle if it exists
+        const landingToggle = document.getElementById("landing-dark-toggle-input");
+        if (landingToggle) landingToggle.checked = false;
       }
       });
       // Toggle chat position in modal
@@ -1425,6 +1549,7 @@
       if (localStorage.getItem('darkMode') === 'true') {
       document.body.classList.add('dark-mode');
       document.getElementById("modal-dark-toggle").checked = true;
+      document.getElementById("landing-dark-toggle-input").checked = true;
       }
       if (localStorage.getItem('chatPosition') === 'end') {
       document.getElementById("modal-chat-toggle").checked = true;
@@ -1433,6 +1558,23 @@
       document.getElementById("modal-chat-toggle").checked = false;
       document.getElementById("chat-position-text").textContent = "At start";
       }
+      
+      // Landing page dark mode toggle
+      document.getElementById("landing-dark-toggle-input").addEventListener("change", (e) => {
+        if (e.target.checked) {
+          document.body.classList.add('dark-mode');
+          localStorage.setItem('darkMode', 'true');
+          // Sync with modal toggle if it exists
+          const modalToggle = document.getElementById("modal-dark-toggle");
+          if (modalToggle) modalToggle.checked = true;
+        } else {
+          document.body.classList.remove('dark-mode');
+          localStorage.setItem('darkMode', 'false');
+          // Sync with modal toggle if it exists
+          const modalToggle = document.getElementById("modal-dark-toggle");
+          if (modalToggle) modalToggle.checked = false;
+        }
+      });
     });
 
     // Event for the share button: copy the chat title + ChatGPT/Claude link to clipboard
