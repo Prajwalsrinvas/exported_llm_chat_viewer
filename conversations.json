@@ -1,0 +1,586 @@
+[
+    {
+        "uuid": "75c36ba1-1c03-4f51-a70b-1c02d07ae158",
+        "name": "RAG Implementation with Ollama",
+        "created_at": "2025-07-27T18:44:30.679344Z",
+        "updated_at": "2025-07-27T18:45:17.461376Z",
+        "account": {
+            "uuid": "16311d9f-ac48-4a0e-ac7c-b8595eba1123"
+        },
+        "chat_messages": [
+            {
+                "uuid": "60beacef-ff6f-4e3f-b3a4-d58fa42a95be",
+                "text": "help me understand how this is working\nbelow code is from: https://huggingface.co/blog/ngxson/make-your-own-rag\n\n\n```python\nimport ollama\n\n\n# Load the dataset\n\ndataset = []\nwith open('cat-facts.txt', 'r') as file:\n  dataset = file.readlines()\n  print(f'Loaded {len(dataset)} entries')\n\n\n\n# Implement the retrieval system\n\nEMBEDDING_MODEL = 'hf.co/CompendiumLabs/bge-base-en-v1.5-gguf'\nLANGUAGE_MODEL = 'hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF'\n\n# Each element in the VECTOR_DB will be a tuple (chunk, embedding)\n# The embedding is a list of floats, for example: [0.1, 0.04, -0.34, 0.21, ...]\nVECTOR_DB = []\n\ndef add_chunk_to_database(chunk):\n  embedding = ollama.embed(model=EMBEDDING_MODEL, input=chunk)['embeddings'][0]\n  VECTOR_DB.append((chunk, embedding))\n\nfor i, chunk in enumerate(dataset):\n  add_chunk_to_database(chunk)\n  print(f'Added chunk {i+1}/{len(dataset)} to the database')\n\ndef cosine_similarity(a, b):\n  dot_product = sum([x * y for x, y in zip(a, b)])\n  norm_a = sum([x ** 2 for x in a]) ** 0.5\n  norm_b = sum([x ** 2 for x in b]) ** 0.5\n  return dot_product / (norm_a * norm_b)\n\ndef retrieve(query, top_n=3):\n  query_embedding = ollama.embed(model=EMBEDDING_MODEL, input=query)['embeddings'][0]\n  # temporary list to store (chunk, similarity) pairs\n  similarities = []\n  for chunk, embedding in VECTOR_DB:\n    similarity = cosine_similarity(query_embedding, embedding)\n    similarities.append((chunk, similarity))\n  # sort by similarity in descending order, because higher similarity means more relevant chunks\n  similarities.sort(key=lambda x: x[1], reverse=True)\n  # finally, return the top N most relevant chunks\n  return similarities[:top_n]\n\n\n\n# Chatbot\n\ninput_query = input('Ask me a question: ')\nretrieved_knowledge = retrieve(input_query)\n\nprint('Retrieved knowledge:')\nfor chunk, similarity in retrieved_knowledge:\n  print(f' - (similarity: {similarity:.2f}) {chunk}')\n\ninstruction_prompt = f'''You are a helpful chatbot.\nUse only the following pieces of context to answer the question. Don't make up any new information:\n{'\\n'.join([f' - {chunk}' for chunk, similarity in retrieved_knowledge])}\n'''\n# print(instruction_prompt)\n\nstream = ollama.chat(\n  model=LANGUAGE_MODEL,\n  messages=[\n    {'role': 'system', 'content': instruction_prompt},\n    {'role': 'user', 'content': input_query},\n  ],\n  stream=True,\n)\n\n# print the response from the chatbot in real-time\nprint('Chatbot response:')\nfor chunk in stream:\n  print(chunk['message']['content'], end='', flush=True)\n\n```\n\nweb search what is required",
+                "content": [
+                    {
+                        "start_timestamp": "2025-07-27T18:44:31.756851Z",
+                        "stop_timestamp": "2025-07-27T18:44:31.756851Z",
+                        "type": "text",
+                        "text": "help me understand how this is working\nbelow code is from: https://huggingface.co/blog/ngxson/make-your-own-rag\n\n\n```python\nimport ollama\n\n\n# Load the dataset\n\ndataset = []\nwith open('cat-facts.txt', 'r') as file:\n  dataset = file.readlines()\n  print(f'Loaded {len(dataset)} entries')\n\n\n\n# Implement the retrieval system\n\nEMBEDDING_MODEL = 'hf.co/CompendiumLabs/bge-base-en-v1.5-gguf'\nLANGUAGE_MODEL = 'hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF'\n\n# Each element in the VECTOR_DB will be a tuple (chunk, embedding)\n# The embedding is a list of floats, for example: [0.1, 0.04, -0.34, 0.21, ...]\nVECTOR_DB = []\n\ndef add_chunk_to_database(chunk):\n  embedding = ollama.embed(model=EMBEDDING_MODEL, input=chunk)['embeddings'][0]\n  VECTOR_DB.append((chunk, embedding))\n\nfor i, chunk in enumerate(dataset):\n  add_chunk_to_database(chunk)\n  print(f'Added chunk {i+1}/{len(dataset)} to the database')\n\ndef cosine_similarity(a, b):\n  dot_product = sum([x * y for x, y in zip(a, b)])\n  norm_a = sum([x ** 2 for x in a]) ** 0.5\n  norm_b = sum([x ** 2 for x in b]) ** 0.5\n  return dot_product / (norm_a * norm_b)\n\ndef retrieve(query, top_n=3):\n  query_embedding = ollama.embed(model=EMBEDDING_MODEL, input=query)['embeddings'][0]\n  # temporary list to store (chunk, similarity) pairs\n  similarities = []\n  for chunk, embedding in VECTOR_DB:\n    similarity = cosine_similarity(query_embedding, embedding)\n    similarities.append((chunk, similarity))\n  # sort by similarity in descending order, because higher similarity means more relevant chunks\n  similarities.sort(key=lambda x: x[1], reverse=True)\n  # finally, return the top N most relevant chunks\n  return similarities[:top_n]\n\n\n\n# Chatbot\n\ninput_query = input('Ask me a question: ')\nretrieved_knowledge = retrieve(input_query)\n\nprint('Retrieved knowledge:')\nfor chunk, similarity in retrieved_knowledge:\n  print(f' - (similarity: {similarity:.2f}) {chunk}')\n\ninstruction_prompt = f'''You are a helpful chatbot.\nUse only the following pieces of context to answer the question. Don't make up any new information:\n{'\\n'.join([f' - {chunk}' for chunk, similarity in retrieved_knowledge])}\n'''\n# print(instruction_prompt)\n\nstream = ollama.chat(\n  model=LANGUAGE_MODEL,\n  messages=[\n    {'role': 'system', 'content': instruction_prompt},\n    {'role': 'user', 'content': input_query},\n  ],\n  stream=True,\n)\n\n# print the response from the chatbot in real-time\nprint('Chatbot response:')\nfor chunk in stream:\n  print(chunk['message']['content'], end='', flush=True)\n\n```\n\nweb search what is required",
+                        "citations": []
+                    }
+                ],
+                "sender": "human",
+                "created_at": "2025-07-27T18:44:31.759542Z",
+                "updated_at": "2025-07-27T18:44:31.759542Z",
+                "attachments": [],
+                "files": []
+            },
+            {
+                "uuid": "46594d54-1e8f-4db4-ac61-af41179659c0",
+                "text": "The user wants to understand how this RAG (Retrieval-Augmented Generation) code is working. They've provided a Python code snippet from a Hugging Face blog post. Let me analyze the code first, then I should search for more information about the required dependencies and context to give them a complete understanding.\n\nThe code appears to be implementing a basic RAG system using:\n1. Ollama for embeddings and language model\n2. A simple vector database stored in memory\n3. Cosine similarity for retrieval\n4. A chatbot interface\n\nLet me search for information about what's required to run this code and understand the dependencies better.I'll help you understand this RAG (Retrieval-Augmented Generation) system and search for what's required to run it.\n```\nThis block is not supported on your current device yet.\n```\n\nGreat! I have good information about the requirements for running this RAG code. Let me search for the specific blog post to get more context about the original code.\n```\nThis block is not supported on your current device yet.\n```\n\nPerfect! I now have comprehensive information about the RAG code the user provided. Let me analyze the code step by step and explain how it works, what's required to run it, and provide a detailed breakdown.\n\nFrom the search results, I can see that:\n\n1. This is from a Hugging Face blog post by ngxson (Xuan-Son Nguyen) titled \"Code a simple RAG from scratch\"\n2. The code uses Ollama to run local LLM models\n3. It implements a basic RAG system with embedding models, vector database, and retrieval\n4. The main requirements are Ollama installation and specific models\n\nLet me provide a comprehensive explanation of how this RAG system works.Now I understand this RAG system! This is a great example from ngxson's Hugging Face blog post that demonstrates building a simple Retrieval-Augmented Generation system from scratch using Python and Ollama. Let me break down how it works and what you need to run it.\n\n## What You Need to Run This Code\n\n**Prerequisites:**\n1. **Ollama installed** - Download from their official website and install it locally\n2. **Python 3** with the `ollama` library (`pip install ollama`)\n3. **The required models downloaded via Ollama:**\n   ```bash\n   ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf\n   ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF\n   ```\n4. **A text file called `cat-facts.txt`** with facts (one per line)\n\n## How the RAG System Works\n\nThis code implements a **3-phase RAG pipeline**:\n\n### **Phase 1: Indexing (Building the Vector Database)**\n```python\n# Each element in VECTOR_DB will be a tuple (chunk, embedding)\nVECTOR_DB = []\n\ndef add_chunk_to_database(chunk):\n  embedding = ollama.embed(model=EMBEDDING_MODEL, input=chunk)['embeddings'][0]\n  VECTOR_DB.append((chunk, embedding))\n```\n\n- **Loads your dataset**: Reads facts from `cat-facts.txt`\n- **Creates embeddings**: Uses the BGE embedding model to convert each text chunk into a vector representation that captures semantic meaning\n- **Stores in memory**: Creates a simple in-memory vector database as a list of tuples `(text_chunk, embedding_vector)`\n\n### **Phase 2: Retrieval (Finding Relevant Information)**\n```python\ndef retrieve(query, top_n=3):\n  query_embedding = ollama.embed(model=EMBEDDING_MODEL, input=query)['embeddings'][0]\n  similarities = []\n  for chunk, embedding in VECTOR_DB:\n    similarity = cosine_similarity(query_embedding, embedding)\n    similarities.append((chunk, similarity))\n  similarities.sort(key=lambda x: x[1], reverse=True)\n  return similarities[:top_n]\n```\n\n- **Embeds your question**: Converts your query into the same vector space\n- **Calculates similarity**: Uses cosine similarity to find which stored chunks are most semantically similar to your question\n- **Returns top matches**: Gets the 3 most relevant pieces of information\n\n### **Phase 3: Generation (Creating the Answer)**\n```python\ninstruction_prompt = f'''You are a helpful chatbot.\nUse only the following pieces of context to answer the question. Don't make up any new information:\n{'\\n'.join([f' - {chunk}' for chunk, similarity in retrieved_knowledge])}\n'''\n\nstream = ollama.chat(\n  model=LANGUAGE_MODEL,\n  messages=[\n    {'role': 'system', 'content': instruction_prompt},\n    {'role': 'user', 'content': input_query},\n  ]\n)\n```\n\n- **Builds context**: Takes the retrieved chunks and formats them as context\n- **Generates response**: Uses the Llama language model to generate responses based on the retrieved knowledge\n- **Constrains output**: The prompt specifically tells the model to only use the provided context\n\n## Key Concepts Explained\n\n**Vector Embeddings**: Think of it as SQL WHERE clause, but instead of querying by exact text matching, we can now query a set of chunks based on their vector representations\n\n**Cosine Similarity**: The math formula `cosine_similarity(a, b)` measures how \"similar\" two vectors are - closer to 1 means more similar, closer to 0 means less related.\n\n**RAG Benefits**: While the chatbot can respond to common questions based on its training dataset, it may lack access to the most up-to-date or domain-specific knowledge - RAG solves this by giving the model access to external information.\n\n## Limitations & Improvements\n\nThe current system has limitations: if the question covers multiple topics at the same time, the system may not be able to provide a good answer. This is because the system only retrieves chunks based on the similarity of the query to the chunks, without considering the context of the query.\n\n**Potential improvements:**\n- Use reranking models for better relevance\n- Implement query expansion \n- Add more sophisticated chunking strategies\n- Use persistent vector databases like ChromaDB or Weaviate\n\nThis is an excellent starting point for understanding RAG! The code is simple but demonstrates all the core concepts you'd find in production RAG systems.",
+                "content": [
+                    {
+                        "start_timestamp": "2025-07-27T18:44:33.888372Z",
+                        "stop_timestamp": "2025-07-27T18:44:36.621711Z",
+                        "type": "thinking",
+                        "thinking": "The user wants to understand how this RAG (Retrieval-Augmented Generation) code is working. They've provided a Python code snippet from a Hugging Face blog post. Let me analyze the code first, then I should search for more information about the required dependencies and context to give them a complete understanding.\n\nThe code appears to be implementing a basic RAG system using:\n1. Ollama for embeddings and language model\n2. A simple vector database stored in memory\n3. Cosine similarity for retrieval\n4. A chatbot interface\n\nLet me search for information about what's required to run this code and understand the dependencies better.",
+                        "summaries": [
+                            {
+                                "summary": "Thinking about implementing a retrieval-augmented generation (RAG) chatbot system"
+                            },
+                            {
+                                "summary": "Analyzing code and searching for dependencies and context"
+                            },
+                            {
+                                "summary": "Analyzed RAG code, explored dependencies and implementation strategy."
+                            }
+                        ],
+                        "cut_off": false
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:36.682248Z",
+                        "stop_timestamp": "2025-07-27T18:44:37.204545Z",
+                        "type": "text",
+                        "text": "I'll help you understand this RAG (Retrieval-Augmented Generation) system and search for what's required to run it.",
+                        "citations": []
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:37.360977Z",
+                        "stop_timestamp": "2025-07-27T18:44:37.666382Z",
+                        "type": "tool_use",
+                        "name": "web_search",
+                        "input": {
+                            "query": "ollama requirements RAG tutorial"
+                        },
+                        "message": "Searching the web",
+                        "integration_name": null,
+                        "integration_icon_url": null,
+                        "context": null,
+                        "display_content": null,
+                        "approval_options": null,
+                        "approval_key": null
+                    },
+                    {
+                        "start_timestamp": null,
+                        "stop_timestamp": null,
+                        "type": "tool_result",
+                        "name": "web_search",
+                        "content": [
+                            {
+                                "type": "knowledge",
+                                "title": "RAG With Llama 3.1 8B, Ollama, and Langchain: Tutorial | DataCamp",
+                                "url": "https://www.datacamp.com/tutorial/llama-3-1-rag",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "datacamp.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=datacamp.com",
+                                    "site_name": "DataCamp"
+                                },
+                                "is_missing": false,
+                                "text": "These include downloading the Llama 3.1 model to your local machine, setting up the environment, loading the necessary libraries, and creating a retrieval mechanism. Finally, we\u2019ll combine this with a language model to build a complete application. Below is a clear, step-by-step guide to ...\n\nTo set up a RAG application with Llama 3.1, several steps are required. These include downloading the Llama 3.1 model to your local machine, setting up the environment, loading the necessary libraries, and creating a retrieval mechanism. Finally, we\u2019ll combine this with a language model to build a complete application. Below is a clear, step-by-step guide to help you implement a RAG application using Llama 3.1. First, install the Ollama application, which lets us run Llama 3.1 and other open-source language models on your local machine. You can download the Ollama app from their official website. Once you\u2019ve installed and opened Ollama, the next step is to download the Llama 3.1 model to your local machine. For this tutorial, we will be using the 8B parameter version. To download it, open your terminal and run the following command line: ... After the model finishes downloading, we will be ready to connect it using Langchain, which we will show you how to do it in later sections.\n\nLearn to build a RAG application with Llama 3.1 8B using Ollama and Langchain by setting up the environment, processing documents, creating embeddings, and integrating a retriever. ... Get your team access to the full DataCamp for business platform. Meta's release of Llama 3.1 is a strong advancement in open-weights LLM models. With options that go up to 405 billion parameters, Llama 3.1 is on par with top closed-source models like OpenAI\u2019s GPT-4o, Anthropic\u2019s Claude 3, and Google Gemini. In this tutorial, we will learn how to implement a retrieval-augmented generation (RAG) application using the Llama 3.1 8B model. We\u2019ll learn why Llama 3.1 is great for RAG, how to download and access Llama 3.1 locally using Ollama, and how to connect to it using Langchain to build the overall RAG application. We will also learn about the different use cases and real-world applications of Llama 3.1.\n\nImplementing a RAG application with Llama 3.1 using Ollama and Langchain offers a good solution for creating advanced, context-aware language models. By following the outlined steps\u2014setting up the environment, loading and processing documents, creating embeddings, and integrating the retriever with the LLM\u2014you can build a functional RAG system capable of retrieving relevant information and providing accurate responses. Llama 3.1\u2019s integration with RAG is particularly valuable for real-world applications such as chatbots, question-answering systems, and research tools, where access to up-to-date external information is important. Build a customer-support assistant step-by-step with Google\u2019s Agent Development Kit (ADK). ... Ryan is a lead data scientist specialising in building AI applications using LLMs. He is a PhD candidate in Natural Language Processing and Knowledge Graphs at Imperial College London, where he also completed his Master\u2019s degree in Computer Science.\n\nLearn the step-by-step process of setting up a RAG application using Llama 3.2 Vision, Ollama, and ColPali. ... Learn how to build a retrieval-augmented generation (RAG) pipeline using Llama 4 to create a simple web application. ... Learn how to implement recursive retrieval in RAG systems using LlamaIndex to improve the accuracy and relevance of retrieved information, especially for large document collections. ... Learn how to build a local RAG chatbot using DeepSeek-R1 with Ollama, LangChain, and Chroma. ... Run LLaMA 3 locally with GPT4ALL and Ollama, and integrate it into VSCode. Then, build a Q&A retrieval system using Langchain and Chroma DB.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "September 5, 2024",
+                                    "url": "https://www.datacamp.com/tutorial/llama-3-1-rag"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "RAG Applications: Build with Ollama & Python Tutorial",
+                                "url": "https://collabnix.com/building-rag-applications-with-ollama-and-python-complete-2025-tutorial/",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "collabnix.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=collabnix.com",
+                                    "site_name": "Collabnix"
+                                },
+                                "is_missing": false,
+                                "text": "Building RAG applications with Ollama and Python offers unprecedented flexibility and control over your AI systems. This tutorial covered the complete pipeline from document ingestion to production deployment, including advanced techniques like hybrid search, query expansion, and performance optimization. ... The RAG landscape continues to evolve rapidly, with new techniques and models emerging regularly. Stay updated with the latest developments in embedding models, retrieval strategies, and local LLM capabilities to maintain competitive advantages in your applications. By following this comprehensive guide, you\u2019re well-equipped to build, deploy, and scale robust RAG applications that leverage the power of local language models through Ollama and Python. Ready to implement your own RAG application? Start with the basic example and gradually incorporate advanced features based on your specific requirements.\n\nRetrieval-Augmented Generation (RAG) has revolutionized how we build intelligent applications that can access and reason over external knowledge bases. In this comprehensive tutorial, we\u2019ll explore how to build production-ready RAG applications using Ollama and Python, leveraging the latest techniques and best practices for 2025. What is RAG and Why Use Ollama? Retrieval-Augmented Generation combines the [\u2026]\n\nRetrieval-Augmented Generation (RAG) has revolutionized how we build intelligent applications that can access and reason over external knowledge bases. In this comprehensive tutorial, we\u2019ll explore how to build production-ready RAG applications using Ollama and Python, leveraging the latest techniques and best practices for 2025. Retrieval-Augmented Generation combines the power of large language models with external knowledge retrieval systems. Instead of relying solely on the model\u2019s training data, RAG applications can access real-time information from documents, databases, and other sources. Ollama stands out as the premier choice for local LLM deployment because it: ... Before building RAG applications with Ollama and Python, ensure you have the following requirements: ... # Linux/macOS curl -fsSL https://ollama.ai/install.sh | sh # Windows # Download from https://ollama.ai/download/windows # Verify installation ollama --version \u00b7\n\nCreating example content...\") # Create sample documents for demonstration sample_docs = { \"sample_doc1.txt\": \"This is a sample technical document about RAG applications...\", \"sample_doc2.txt\": \"Python is a versatile programming language used for AI applications...\" } for filename, content in sample_docs.items(): with open(filename, 'w') as f: f.write(content) rag_app.ingest_documents(list(sample_docs.keys())) # Interactive query loop print(\"\\nRAG Application Ready! Type 'quit' to exit.\") while True: query = input(\"\\nEnter your question: \") if query.lower() == 'quit': break result = rag_app.query_with_cache(query) print(f\"\\nAnswer: {result['answer']}\") print(f\"Sources: {[meta['filename'] for meta in result['sources']]}\") print(f\"Confidence: {1 - min(result['confidence_scores']):.2f}\") if __name__ == \"__main__\": main() FROM python:3.11-slim # Install Ollama RUN curl -fsSL https://ollama.ai/install.sh | sh # Install Python dependencies COPY requirements.txt .",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://collabnix.com/building-rag-applications-with-ollama-and-python-complete-2025-tutorial/"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Build Your Own RAG App: A Step-by-Step Guide to Setup LLM locally using Ollama, Python, and ChromaDB - DEV Community",
+                                "url": "https://dev.to/nassermaronie/build-your-own-rag-app-a-step-by-step-guide-to-setup-llm-locally-using-ollama-python-and-chromadb-b12",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "dev.to",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=dev.to",
+                                    "site_name": "DEV Community"
+                                },
+                                "is_missing": false,
+                                "text": "Before diving into the setup, ensure you have the following prerequisites in place: Python 3: Python is a versatile programming language that you&#x27;ll use to write the code for your RAG app. ChromaDB: A vector database that will store and manage the embeddings of our data.\n\nBy setting up a local RAG application with tools like Ollama, Python, and ChromaDB, you can enjoy the benefits of advanced language models while maintaining control over your data and customization options. Running large language models (LLMs) like the ones used in Retrieval-Augmented Generation (RAG) requires significant computational power. One of the key components that enable efficient processing and embedding of data in these models is the Graphics Processing Unit (GPU). Here's why GPUs are essential for this task and how they impact the performance of your local LLM setup: A GPU is a specialized processor designed to accelerate the rendering of images and videos. Unlike Central Processing Units (CPUs), which are optimized for sequential processing tasks, GPUs excel at parallel processing. This makes them particularly well-suited for the complex mathematical computations required by machine learning and deep learning models.\n\nInvesting in a high-performance GPU is crucial for running LLM models locally. It ensures faster data processing, efficient model training, and quick response generation, making your local RAG application more robust and reliable. By leveraging the power of GPUs, you can fully realize the benefits of hosting your own custom chatbot, tailored to your specific needs and data privacy requirements. Before diving into the setup, ensure you have the following prerequisites in place: Python 3: Python is a versatile programming language that you'll use to write the code for your RAG app. ChromaDB: A vector database that will store and manage the embeddings of our data. Ollama: To download and serve custom LLMs in our local machine. To install and setup our Python 3 environment, follow these steps: Download and setup Python 3 on your machine. Then make sure your Python 3 installed and run successfully: ...\n\nBy following these instructions, you can effectively run and interact with your custom local RAG app using Python, Ollama, and ChromaDB, tailored to your needs. Adjust and expand the functionality as necessary to enhance the capabilities of your application. By harnessing the capabilities of local deployment, you not only safeguard sensitive information but also optimize performance and responsiveness. Whether you're enhancing customer interactions or streamlining internal processes, a locally deployed RAG application offers flexibility and robustness to adapt and grow with your requirements. ... Happy coding! ... Developer from India exploring large AI models. Previously focused on front- and back-end development, now leveraging tools like DeepSeek to enhance coding workflows. ... Developer with a focus on integrating AI tools into software development workflows.\n\nGreat article! It provides a very detailed explanation of how to locally build a RAG application using Ollama, Python 3, and ChromaDB, highlighting the advantages in data privacy and model customization. I've also been trying similar local deployment tools recently, like Servbay, which has saved me a lot of time in setting up the environment. Maybe it\u2019s worth trying them together! ... Perfect. The only issue I encountered was related to lang chain. The below command ws required as part of step 2. pip install langchain-community langchain-core or pip install --upgrade langchain ... Seeking a co-conspirator for a science concept that bends reality (in a fun way!). Interested in the absurdly ambitious? For further actions, you may consider blocking this person and/or reporting abuse ... As a professional in the tech industry, I enjoy delving into complex problems and sharing solutions that help others on their coding journey.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "July 1, 2024",
+                                    "url": "https://dev.to/nassermaronie/build-your-own-rag-app-a-step-by-step-guide-to-setup-llm-locally-using-ollama-python-and-chromadb-b12"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "RAG with OLLAMA - DEV Community",
+                                "url": "https://dev.to/mohsin_rashid_13537f11a91/rag-with-ollama-1049",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "dev.to",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=dev.to",
+                                    "site_name": "DEV Community"
+                                },
+                                "is_missing": false,
+                                "text": "In the world of natural language processing (NLP), combining retrieval and generation capabilities... Tagged with python, llama, ollama.\n\nIn the world of natural language processing (NLP), combining retrieval and generation capabilities has led to significant advancements. Retrieval-Augmented Generation (RAG) enhances the quality of generated text by integrating external information sources. This article demonstrates how to create a RAG system using a free Large Language Model (LLM). We will be using OLLAMA and the LLaMA 3 model, providing a practical approach to leveraging cutting-edge NLP techniques without incurring costs. Whether you're a developer, researcher, or enthusiast, this guide will help you implement a RAG system efficiently and effectively. Note: Before proceeding further you need to download and run Ollama, you can do so by clicking here. The following is an example on how to setup a very basic yet intuitive RAG \u00b7\n\nThanks, Mohsin Rashid. I recently read the \"Rag with Ollam,\" and I must say, it is both good and quite informative. The content is well-researched, and the insights provided are valuable. The way it presents information is engaging and easy to understand, making it a great resource for anyone looking to deepen their knowledge on the topic. Highly recommended! ... Perfect, thanks!!! For further actions, you may consider blocking this person and/or reporting abuse ...",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "July 25, 2024",
+                                    "url": "https://dev.to/mohsin_rashid_13537f11a91/rag-with-ollama-1049"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Building a Local RAG System for Privacy Preservation with Ollama and Weaviate | Weaviate",
+                                "url": "https://weaviate.io/blog/local-rag-with-ollama-and-weaviate",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "weaviate.io",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=weaviate.io",
+                                    "site_name": "Weaviate"
+                                },
+                                "is_missing": false,
+                                "text": "Download the Ollama version for your operating system from the official download page and follow the few installation steps. Open a terminal and pull the relevant LLMs and embedding models of your choice. For this tutorial, we will be using llama2 by Meta for the LLM and all-minilm for the ...\n\nThis article showcases how you can implement a local RAG-based chatbot in Python in an on-premises environment without any dependencies on the outside world using the following local components: ... Everything is local, open source, and doesn\u2019t require any API keys! Had I known that getting set up with Ollama takes less than 5 minutes, I wouldn\u2019t have put it off for so long. Download the Ollama version for your operating system from the official download page and follow the few installation steps. Open a terminal and pull the relevant LLMs and embedding models of your choice. For this tutorial, we will be using llama2 by Meta for the LLM and all-minilm for the embedding model. ... Other available embedding models are mxbai-embed-large (334 M parameters) and nomic-embed-text (137 M parameters). Since we\u2019re implementing the RAG pipeline in Python, you will need to pip install the Python library.\n\nSince we\u2019re implementing the RAG pipeline in Python, you will need to pip install the Python library. In this tutorial, we\u2019re using version 4.5.5. ... Once you have the relevant models pulled locally and ready to be served with Ollama and your vector database self-hosted via Docker, you can start implementing the RAG pipeline. The following example is based on a post in the Ollama blog titled \u201cEmbedding models\u201d. Local Retrieval-Augmented Generation System with language models via Ollama \u00b7 The first step in building a RAG pipeline is to ingest your data into a vector database. For this, you will need to generate the data's embeddings. Below, you can see a few sample documents from an example used in an Ollama blog post.\n\nThis article guided you through a very simple example of a RAG pipeline to highlight how you can build a local RAG system for privacy preservation using local components (language models via Ollama, Weaviate vector database self-hosted via Docker). Note, that this tutorial does not use any orchestration frameworks, such as LangChain or LlamaIndex. However, both LangChain and LlamaIndex have integrations with both Ollama and Weaviate, so that you can easily modify the above tutorial to the orchestration framework of your choice. You can find the Notebook related to this article in this GitHub repository. Check out the Quickstart tutorial, or build amazing apps with a free trial of Weaviate Cloud (WCD). ... Sign up for our bi-weekly newsletter to stay updated!\n\nHow to implement a local Retrieval-Augmented Generation pipeline with Ollama language models and a self-hosted Weaviate vector database via Docker in Python.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "May 21, 2024",
+                                    "url": "https://weaviate.io/blog/local-rag-with-ollama-and-weaviate"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Ollama guide: Building local RAG chatbots with LangChain",
+                                "url": "https://www.educative.io/blog/ollama-guide",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "educative.io",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=educative.io",
+                                    "site_name": "Educative"
+                                },
+                                "is_missing": false,
+                                "text": "Following these steps, we\u2019ve created an advanced RAG-based chatbot that can process PDF documents and answer questions based on their content, all within a user-friendly Streamlit interface. This chatbot demonstrates the power of combining local language models with retrieval-augmented generation for document-based question answering. ... Local development: Test and prototype AI applications without relying on cloud services. Privacy-focused applications: Run AI models locally to ensure data privacy. Educational tools: Learn about and experiment with LLMs in a controlled environment. Offline AI capabilities: Develop applications that can function without internet connectivity. Custom assistants: Create specialized AI assistants for specific domains or tasks. While Ollama is powerful, it\u2019s important to note some limitations: Hardware requirements: Running large models locally, such as Llama 3.1 405B, requires significant computational resources.\n\nContinuous updates: Keeping open-source models up-to-date requires consistent effort. To ensure optimal performance, new versions and improvements must be integrated into the Ollama environment. As the field of AI continues to advance, tools like Ollama are likely to play an increasingly important role in democratizing access to powerful language models. Future developments may include support for more models, improved performance optimizations, and enhanced integration capabilities. Ollama represents a significant step forward in making LLMs accessible to developers and enthusiasts. By simplifying the process of running these models locally, it opens up new possibilities for AI application development, research, and education. As we\u2019ve seen with our RAG-based chatbot example, Ollama can be easily integrated into practical applications, allowing for the creation of powerful, privacy-preserving AI tools.\n\nAs the field continues to evolve, tools like Ollama will undoubtedly play a crucial role in shaping the future of AI development and deployment. To further enhance your understanding of RAG and its applications, consider exploring the following resources and projects: Explore these hands-on projects to enrich your understanding of RAG: Build an LLM-Powered Wikipedia Chat Assistant with RAG \u00b7 Build an Interactive PDF Reader Using LangChain and Streamlit \u00b7 Building a Retrieval-Augmented Generation System Using FastAPI \u00b7 To make a chatbot efficient, focus on technical aspects like selecting the right platform, optimizing NLP, utilizing machine learning, and implementing caching. Additionally, design efficiency is crucial, involving clear goals, limited scope, prioritized conversations, quick responses, relevant information, clear language, and human handoff options. Continuous improvement is essential, requiring monitoring, feedback gathering, and iteration.\n\nIn the rapidly evolving AI landscape, Ollama has emerged as a powerful open-source tool for running large language models (LLMs) locally. This guide explores Ollama\u2019s features and how it enables the creation of Retrieval-Augmented Generation (RAG) chatbots using Streamlit. With simple installation, wide model support, and efficient resource management, Ollama makes AI capabilities accessible on personal computers. It supports custom model creation and offers a RESTful API for integration. By combining Ollama with LangChain, developers can build advanced chatbots capable of processing documents and providing dynamic responses. This blog walks through setting up the environment, managing models, and creating a RAG chatbot, highlighting the practical applications of Ollama in AI development.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://www.educative.io/blog/ollama-guide"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "[Local AI with Ollama] Building a RAG System with Ollama and LangChain - Devtutorial",
+                                "url": "https://devtutorial.io/local-ai-with-ollama-building-a-rag-system-with-ollama-and-langchain-p3820.html",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "devtutorial.io",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=devtutorial.io",
+                                    "site_name": "DevTutorial"
+                                },
+                                "is_missing": false,
+                                "text": "Retrieval-Augmented Generation (RAG) enables your LLM-powered assistant to answer questions using up-to-date and domain-specific knowledge from your own files. This guide will show you how to build a complete, local RAG pipeline with Ollama (for LLM and embeddings) and LangChain (for orchestration)\u2014step by step, using a real PDF, and add a simple UI with Streamlit. Language models are powerful, but limited to their training data. RAG (Retrieval-Augmented Generation) connects an LLM with a retriever that searches your own documents, making it possible to answer questions grounded in real, current, and private knowledge. Your documents are split into chunks and converted to embeddings (vectors). Both the embeddings and the original text are stored in a vector database. Your query is also embedded and used to retrieve similar chunks. The LLM generates an answer using both your query and the retrieved content.\n\nproject/ \u251c\u2500\u2500 data/ \u2502 \u2514\u2500\u2500pca_tutorial.pdf \u251c\u2500\u2500 requirements.txt \u251c\u2500\u2500 pdf_rag.py # Main script \u251c\u2500\u2500 pdf_rag_streamlit.py # Streamlit UI version ... chromadb elevenlabs fastembed langchain langchain-community langchain-core langchain-ollama langchain_text_splitters ollama pdfplumber sentence-transformers unstructured unstructured[all-docs] ... We start by loading a PDF file.\n\nfrom langchain_core.output_parsers import StrOutputParser context_prompt = ChatPromptTemplate.from_template( \"Answer the question using ONLY the context below:\\n{context}\\n\\nQuestion: {question}\" ) rag_chain = ( {\"context\": retriever, \"question\": RunnablePassthrough()} | context_prompt | llm | StrOutputParser() ) # === Example Query === user_question = \"What is the goal of PCA?\" response = rag_chain.invoke(user_question) print(\"\\n=== RAG Response ===\\n\") print(response) ... from langchain_community.document_loaders import UnstructuredPDFLoader import os pdf_file = \"./data/pca_tutorial.pdf\" embedding_model_name = \"nomic-embed-text\" llm_model_name = \"llama3.2\" # Load and Ingest a PDF if os.path.exists(pdf_file): pdf_loader = UnstructuredPDFLoader(file_path=pdf_file) documents = pdf_loader.load() print(\"[\u2713] PDF file loaded successfully.\") else: raise FileNotFoundError(\"PDF file not found. Please upload a valid file.\") # Split the PDF into Chunks from langchain_text_splitters import Recurs\n\nTo make your RAG pipeline interactive, let's wrap it in a simple Streamlit app. Here's how to get started: ... import streamlit as st from langchain_community.document_loaders import UnstructuredPDFLoader from langchain_text_splitters import RecursiveCharacterTextSplitter from langchain_ollama import OllamaEmbeddings, ChatOllama from langchain_community.vectorstores import Chroma from langchain.retrievers.multi_query import MultiQueryRetriever from langchain.prompts import PromptTemplate, ChatPromptTemplate from langchain_core.output_parsers import StrOutputParser from langchain_core.runnables import RunnablePassthrough import ollama import os PDF_FILE = \"./data/pca_tutorial.pdf\" EMBED_MODEL = \"nomic-embed-text\" LLM_MODEL = \"llama3.2\" @st.cache_resource def load_pdf(path): if os.path.exists(path): loader = UnstructuredPDFLoader(file_path=path) return loader.load() else: st.error(f\"PDF not found at: {path}\") return [] @st.cache_resource def build_rag_chain(_documents, embed_model=EMBED_",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://devtutorial.io/local-ai-with-ollama-building-a-rag-system-with-ollama-and-langchain-p3820.html"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Tuning Local LLMs With RAG Using Ollama and Langchain",
+                                "url": "https://itsfoss.com/local-llm-rag-ollama-langchain/",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "itsfoss.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=itsfoss.com",
+                                    "site_name": "It's FOSS"
+                                },
+                                "is_missing": false,
+                                "text": "In this tutorial, we&#x27;ll build a simple RAG-powered document retrieval app using LangChain, ChromaDB, and Ollama. The app lets users upload PDFs, embed them in a vector database, and query for relevant information. ... All the code is available in our GitHub repository.\n\nIn this tutorial, we'll build a simple RAG-powered document retrieval app using LangChain, ChromaDB, and Ollama. The app lets users upload PDFs, embed them in a vector database, and query for relevant information. ... All the code is available in our GitHub repository. You can clone it and start testing right away. To avoid messing up our system packages, we\u2019ll first create a Python virtual environment. This keeps our dependencies isolated and prevents conflicts with system-wide Python packages. Navigate to your project directory and create a virtual environment: ... Once activated, your terminal prompt should change to indicate that you are now inside the virtual environment. With the virtual environment activated, install the necessary Python packages using requirements.txt: ... This will install all the required dependencies for our RAG pipeline, including Flask, LangChain, Ollama, and Pydantic.\n\nThis article takes a deep dive into how RAG works, how LLMs are trained, and how we can use Ollama and Langchain to implement a local RAG system that fine-tunes an LLM\u2019s responses by embedding and retrieving external knowledge dynamically. By the end of this tutorial, we\u2019ll build a PDF-based RAG project that allows users to upload documents and ask questions, with the model responding based on stored data. ... I\u2019m not an AI expert. This article is a hands-on look at Retrieval Augmented Generation (RAG) with Ollama and Langchain, meant for learning and experimentation. There might be mistakes, and if you spot something off or have better insights, feel free to share. It\u2019s nowhere near the scale of how enterprises handle RAG, where they use massive datasets, specialized databases, and high-performance GPUs. RAG is an AI framework that improves LLM responses by integrating real-time information retrieval.\n\nI'm using these light weight LLMs for this tutorial, as I don't have dedicated GPU to inference large models. | You can edit your LLMs in the .env file \u00b7 Now that our RAG app is set up, we need to validate its effectiveness. The goal is to ensure that the system correctly: Embeds documents \u2013 Converts text into vector embeddings and stores them in ChromaDB. Retrieves relevant chunks \u2013 Fetches the most relevant text snippets from ChromaDB based on a query. Generates meaningful responses \u2013 Uses Ollama to construct an intelligent response based on retrieved data. This testing phase ensures that our makeshift RAG pipeline is functioning as expected and can be fine-tuned if necessary. We first need to make sure our Flask app is running. Open a terminal, navigate to your project directory, and activate your virtual environment: cd ~/RAG-Tutorial source venv/bin/activate # On Linux/macOS # or venv\\Scripts\\activate # On Windows (if using venv) ...\n\nBuild a PDF-based RAG project that allows users to upload documents and ask questions, with the model responding based on stored data.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "April 20, 2025",
+                                    "url": "https://itsfoss.com/local-llm-rag-ollama-langchain/"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Build a RAG System with DeepSeek R1 & Ollama",
+                                "url": "https://apidog.com/blog/rag-deepseek-r1-ollama/",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "apidog.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=apidog.com",
+                                    "site_name": "Apidog"
+                                },
+                                "is_missing": false,
+                                "text": "Learn how to build a Retrieval-Augmented Generation (RAG) system using DeepSeek R1 and Ollama. Step-by-step guide with code examples, setup instructions, and best practices for smarter AI applications. ... If you\u2019ve ever wished you could ask questions directly to a PDF or technical manual, this guide is for you. Today, we\u2019ll build a Retrieval-Augmented Generation (RAG) system using DeepSeek R1, an open-source reasoning powerhouse, and Ollama, the lightweight framework for running local AI models. Ready to Supercharge Your API Testing? Don't forget to check out Apidog! Apidog acts as a one-stop platform for creating, managing, and running tests and mock servers, letting you pinpoint bottlenecks and keep your APIs reliable. Instead of juggling multiple tools or writing extensive scripts, you can automate critical parts of your workflow, achieve smooth CI/CD pipelines, and spend more time polishing your product features.\n\nHow Much Does This Local RAG System Cost?What You\u2019ll Need1. Ollama2. DeepSeek R1 Model VariantsBuilding the RAG Pipeline: Code WalkthroughStep 1: Import LibrariesStep 2: Upload & Process PDFsStep 3: Chunk Documents StrategicallyStep 4: Create a Searchable Knowledge BaseStep 5: Configure DeepSeek R1Step 6: Assemble the RAG ChainStep 7: Launch the Web InterfaceThe Future of RAG with DeepSeek \u00b7 Apidog: A Real Design-first API Development Platform ... Learn how AI revolutionizes test case writing and execution. Discover tools like Apidog, implementation strategies, and best practices for AI-powered testing that improves software quality while reducing manual effort. ... Create pro-grade product and API docs in Apidog with Markdown. This guide shows 10 tips: custom sidebar titles, linked project resources, smart links, columns, steps, images, tables, accordions, notices, and copy/tooltip extras.\n\nLearn how to run DeepSeek R1 locally using Ollama in this comprehensive guide. Discover step-by-step instructions, prerequisites, and how to test the API with Apidog. ... DeepSeek R1 comes in sizes from 1.5B to 671B parameters. For this demo, we\u2019ll use the 1.5B model\u2014perfect for lightweight RAG: ... Pro tip: Larger models like 70B offer better reasoning but require more RAM. Start small, then scale up! ... import streamlit as st from langchain_community.document_loaders import PDFPlumberLoader from langchain_experimental.text_splitter import SemanticChunker from langchain_community.embeddings import HuggingFaceEmbeddings from langchain_community.vectorstores import FAISS from langchain_community.llms import Ollama ... In this section, you use Streamlit\u2019s file uploader to allow users to select a local PDF file. # Streamlit file uploader uploaded_file = st.file_uploader(\"Upload a PDF file\", type=\"pdf\") if uploaded_file: # Save PDF temporarily with open(\"temp.pdf\", \"wb\") as f: f.write(upl\n\nllm = Ollama(model=\"deepseek-r1:1.5b\") # Our 1.5B parameter model # Craft the prompt template prompt = \"\"\" 1. Use ONLY the context below. 2. If unsure, say \"I don\u2019t know\". 3. Keep answers under 4 sentences. Context: {context} Question: {question} Answer: \"\"\" QA_CHAIN_PROMPT = PromptTemplate.from_template(prompt) This template forces the model to ground answers in your PDF\u2019s content. By wrapping the language model with a retriever tied to the FAISS index, any queries made through the chain will look up context from the PDF\u2019s content, making the answers grounded in the source material. Next, you can tie together the uploading, chunking, and retrieval steps into a coherent pipeline.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "January 24, 2025",
+                                    "url": "https://apidog.com/blog/rag-deepseek-r1-ollama/"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "RAG with LLaMA Using Ollama: A Deep Dive into Retrieval-Augmented Generation | by DhanushKumar | Medium",
+                                "url": "https://medium.com/@danushidk507/rag-with-llama-using-ollama-a-deep-dive-into-retrieval-augmented-generation-c58b9a1cfcd3",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "medium.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=medium.com",
+                                    "site_name": "Medium"
+                                },
+                                "is_missing": false,
+                                "text": "This ensures responses are factually accurate and grounded in real data, making RAG an effective technique for applications like question answering, document summarization, and chatbots. ... Collect and preprocess documents (e.g., PDFs, web pages, or databases). Split documents into smaller, ...\n\nThe landscape of AI is evolving rapidly, and Retrieval-Augmented Generation (RAG) stands out as a game-changer. Combining powerful language\u2026\n\nThe landscape of AI is evolving rapidly, and Retrieval-Augmented Generation (RAG) stands out as a game-changer. Combining powerful language models like LLaMA with efficient retrieval mechanisms enables high-quality, context-aware responses by grounding the generation in factual data. In this blog, we\u2019ll explore how to implement RAG with LLaMA (using Ollama) on Google Colab. This step-by-step guide covers data ingestion, retrieval, and generation. RAG is a hybrid approach that enhances large language models (LLMs) by integrating external knowledge sources during the generation process. This ensures responses are factually accurate and grounded in real data, making RAG an effective technique for applications like question answering, document summarization, and chatbots. ... Collect and preprocess documents (e.g., PDFs, web pages, or databases). Split documents into smaller, retrievable chunks using text chunkers.\n\nLangChain is a framework for building applications using LLMs and external tools. Ollama bridges LLaMA with LangChain, allowing developers to: Deploy LLaMA models locally or in the cloud. Use LangChain chains, such as RetrievalQA, to orchestrate RAG workflows. Factual Accuracy: RAG ensures responses are grounded in factual data by retrieving relevant information. Efficiency: LLaMA offers high performance with reduced computational overhead. Ease of Deployment: Ollama simplifies running LLaMA models in real-world applications. Chatbots: Grounded in enterprise knowledge bases. Customer Support: Answering FAQs using company manuals or policies. Education: Providing personalized learning assistance. Healthcare: Summarizing and retrieving patient data for medical professionals. Before we dive into the code, ensure you have the following installed: !pip install langchain !pip install -U langchain-community !pip install sentence-transformers !pip install faiss-gpu !pip install pypdf \u00b7\n\nWith RAG and LLaMA, powered by Ollama, you can build robust, efficient, and context-aware NLP applications. The combination of FAISS for retrieval and LLaMA for generation provides a scalable solution for many industries. Start experimenting, and let your creativity guide your implementations!",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "December 1, 2024",
+                                    "url": "https://medium.com/@danushidk507/rag-with-llama-using-ollama-a-deep-dive-into-retrieval-augmented-generation-c58b9a1cfcd3"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": "<system>You only have 19 searches left this turn</system>\n\n",
+                                "uuid": "24a50602-9545-469a-8c48-a5b4fdff3543"
+                            }
+                        ],
+                        "is_error": false,
+                        "message": null,
+                        "integration_name": null,
+                        "integration_icon_url": null,
+                        "display_content": null
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:40.979013Z",
+                        "stop_timestamp": "2025-07-27T18:44:41.880798Z",
+                        "type": "thinking",
+                        "thinking": "Great! I have good information about the requirements for running this RAG code. Let me search for the specific blog post to get more context about the original code.",
+                        "summaries": [],
+                        "cut_off": false
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:42.180996Z",
+                        "stop_timestamp": "2025-07-27T18:44:42.756264Z",
+                        "type": "tool_use",
+                        "name": "web_search",
+                        "input": {
+                            "query": "huggingface blog ngxson make your own rag"
+                        },
+                        "message": "Searching the web",
+                        "integration_name": null,
+                        "integration_icon_url": null,
+                        "context": null,
+                        "display_content": null,
+                        "approval_options": null,
+                        "approval_key": null
+                    },
+                    {
+                        "start_timestamp": null,
+                        "stop_timestamp": null,
+                        "type": "tool_result",
+                        "name": "web_search",
+                        "content": [
+                            {
+                                "type": "knowledge",
+                                "title": "Code a simple RAG from scratch",
+                                "url": "https://huggingface.co/blog/ngxson/make-your-own-rag",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "What is RAG Simple RAG Indexing phase Retrieval phrase Let&#x27;s code it Download ollama and models Loading the dataset Implement the vector database Implement the retrieval function Generation phrase Putting it all together Rooms for improvement Other types of RAG Conclusion References \u00b7 Recently, Retrieval-Augmented Generation (RAG) has emerged as a powerful paradigm in the field of AI and Large Language Models (LLMs). RAG combines information retrieval with text generation to enhance language models&#x27; performance by incorporating external knowledge sources. This approach has shown promising resu\n\nngxson \u00b7 Follow \u00b7 Recently, Retrieval-Augmented Generation (RAG) has emerged as a powerful paradigm in the field of AI and Large Language Models (LLMs). RAG combines information retrieval with text generation to enhance language models' performance by incorporating external knowledge sources. This approach has shown promising results in various applications, such as question answering, dialogue systems, and content generation. In this blog post, we'll explore RAG and build a simple RAG system from scratch using Python and ollama. This project will help you understand the key components of RAG systems and how they can be implemented using fundamental programming concepts. To begin, let's examine a simple chatbot system without RAG: While the chatbot can respond to common questions based on its training dataset, it may lack access to the most up-to-date or domain-specific knowledge.\n\nA Blog post by Xuan-Son Nguyen on Hugging Face\n\nThere are several ways to implement RAG, including Graph RAG, Hybrid RAG, and Hierarchical RAG, which we'll discuss at the end of this post. Let's create a simple RAG system that retrieves information from a predefined dataset and generates responses based on the retrieved knowledge. The system will comprise the following components: Embedding model: A pre-trained language model that converts input text into embeddings - vector representations that capture semantic meaning. These vectors will be used to search for relevant information in the dataset. Vector database: A storage system for knowledge and its corresponding embedding vectors. While there are many vector database technologies like Qdrant, Pinecone, and pgvector, we'll implement a simple in-memory database from scratch. Chatbot: A language model that generates responses based on retrieved knowledge.\n\nThe indexing phase is the first step in creating a RAG system. It involves breaking the dataset (or documents) into small chunks and calculating a vector representation for each chunk that can be efficiently searched during generation. The size of each chunk can vary depending on the dataset and the application. For example, in a document retrieval system, each chunk can be a paragraph or a sentence. In a dialogue system, each chunk can be a conversation turn. After the indexing phrase, each chunk with its corresponding embedding vector will be stored in the vector database. Here is an example of how the vector database might look like after indexing: The embedding vectors can be later used to retrieve relevant information based on a given query. Think of it as SQL WHERE clause, but instead of querying by exact text matching, we can now query a set of chunks based on their vector representations.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/blog/ngxson/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Code a simple RAG from scratch | ngxson's blog",
+                                "url": "https://blog.ngxson.com/make-your-own-rag",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "ngxson.com",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=ngxson.com",
+                                    "site_name": "ngxson's blog"
+                                },
+                                "is_missing": false,
+                                "text": "Explore Retrieval-Augmented Generation (RAG) and create one from scratch to understand the fundamental concepts.\n\nSo far, we have implemented a simple RAG system using a small dataset. However, there are still many limitations: If the question covers multiple topics at the same time, the system may not be able to provide a good answer. This is because the system only retrieves chunks based on the similarity of the query to the chunks, without considering the context of the query. The solution could be to have the chatbot to write its own query based on the user's input, then retrieve the knowledge based on the generated query. We can also use multiple queries to retrieve more relevant information. The top N results are returned based on the cosine similarity. This may not always give the best results, especially when each chunks contains a lot of information. To address this issue, we can use a reranking model to re-rank the retrieved chunks based on their relevance to the query.\n\nTo begin, let's examine a simple chatbot system without RAG: While the chatbot can respond to common questions based on its training dataset, it may lack access to the most up-to-date or domain-specific knowledge. A real-world example would be asking ChatGPT \"What is my mother's name?\". ChatGPT cannot answer this question because it doesn't have access to external knowledge, such as your family members' information. To address this limitation, we need to provide external knowledge to the model (in this example, a list of family members' names): ... A retrieval model that fetches relevant information from an external knowledge source, which could be a database, search engine, or any other information repository. A language model that generates responses based on the retrieved knowledge. There are several ways to implement RAG, including Graph RAG, Hybrid RAG, and Hierarchical RAG, which we'll discuss at the end of this post.\n\nIn this example, we will write a simple Python implement of RAG. To run the models, we will use ollama, a command line tool that allows you to run models from Hugging Face. With ollama, you don't need to have access to a server or cloud service to run the models. You can run the models directly on your computer. ... And for the dataset, we will use a simple list of facts about cat. Each fact will be considered as a chunk in the indexing phrase. First, let's start by installing ollama from project's website: ollama.com \u00b7 After installed, open a terminal and run the following command to download the required models: ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF \u00b7 If you see the following output, it means the models are successfully downloaded: pulling manifest ... verifying sha256 digest writing manifest success \u00b7\n\nThe indexing phase is the first step in creating a RAG system. It involves breaking the dataset (or documents) into small chunks and calculating a vector representation for each chunk that can be efficiently searched during generation. The size of each chunk can vary depending on the dataset and the application. For example, in a document retrieval system, each chunk can be a paragraph or a sentence. In a dialogue system, each chunk can be a conversation turn. After the indexing phrase, each chunk with its corresponding embedding vector will be stored in the vector database. Here is an example of how the vector database might look like after indexing: The embedding vectors can be later used to retrieve relevant information based on a given query. Think of it as SQL WHERE clause, but instead of querying by exact text matching, we can now query a set of chunks based on their vector representations.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "age": "October 30, 2024",
+                                    "url": "https://blog.ngxson.com/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "ngxson (Xuan-Son Nguyen)",
+                                "url": "https://huggingface.co/ngxson",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "A comprehensive matrix for which format should you use. Read more on my blog post: https://huggingface.co/blog/ngxson/common-ai-model-formats \u00b7 | Hardware | GGUF | PyTorch | Safetensors | ONNX | |-----------------|-----------|------------------------|--------------------------|-------| | CPU | \u2705 (best) | \ud83d\udfe1 | \ud83d\udfe1 | \u2705 | | GPU | \u2705 | \u2705 | \u2705 | \u2705 | | Mobile | \u2705 | \ud83d\udfe1 (via executorch) | \u274c | \u2705 | | Apple silicon | \u2705 | \ud83d\udfe1 | \u2705 (via MLX framework) | \u2705 | ... Run GGUF directly on your browser!\n\nDoing AI for fun, not for profit",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/ngxson"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "cat-facts.txt \u00b7 ngxson/demo_simple_rag_py at main",
+                                "url": "https://huggingface.co/ngxson/demo_simple_rag_py/blob/main/cat-facts.txt",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "We\u2019re on a journey to advance and democratize artificial intelligence through open source and open science.\n\ndemo_simple_rag_py / cat-facts.txt \u00b7 ngxson HF Staff \u00b7 Upload 2 files 182ed5b verified 6 months ago \u00b7 raw \u00b7 Copy download link history blame contribute delete \u00b7",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/ngxson/demo_simple_rag_py/blob/main/cat-facts.txt"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Better RAG 1: Advanced Basics",
+                                "url": "https://huggingface.co/blog/hrishioa/retrieval-augmented-generation-1-basics",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "Better methods Retrieval Systems Problems Question Complexity Steering and Inspectability An interactive demo As always it&#x27;s built on the work of so many people - if I&#x27;ve missed citing someone, or there&#x27;s something you think I should add, please let me know! You can usually find me on Twitter \u00b7 Part 1 is an intro to RAG, meant to serve as a base for the parts 2 and 3. They&#x27;re both out! Feel free to jump ahead to Part 2 and Part 3\n\nA Blog post by Hrishi Olickel on Hugging Face\n\nThis is a series on the things I've learned implementing large, multi-modal RAG systems in mission-critical industries like commercial shipping over billions of tokens and pages. It's meant to be an intermediate practitioner's guide to some things you may not have considered, some things we've had to (painfully) discover, and some things we believe every retrieval-based system should have. As always it's built on the work of so many people - if I've missed citing someone, or there's something you think I should add, please let me know! You can usually find me on Twitter. Part 1 is an intro to RAG, meant to serve as a base for the parts 2 and 3. They're both out! Feel free to jump ahead to Part 2 and Part 3. Large Language Models have proven themselves to be wonderful few-shot learners, almost general-purpose intelligences that can learn and execute new tasks, process complex information and serve as digital assistants.\n\nFurthermore, you're always limited in the amount of information you can fetch. Even with expanding context sizes, reasoning and intelligence in models reduces the more information you inject into their input windows. Combined with increasing cost, compute and memory, retrieving higher qualities and lower quantities of information will remain a concern for the foreseeable future. This is also the reason why the modern RAG landscape can seem scary and complex - all of them represent different attempts to solve the same problems. The illustrations above are taken from the wonderful paper from Gao Et al covering the current landscape of RAG systems and techniques. It's a more technical overview of what exists - and covers a lot more things that are out of scope for this series. In this three-part series, we'll go over ways to solve this problem. We'll start at the final step - generation - and walk all the way back to the source information, and look at improving each part.\n\nThis part will be an explanation of how RAG systems work today, the complexities to consider, and the common problems we want to solve. Feel free to skip this one! The other parts will presume a working knowledge of embeddings, retrieval systems, LLM-based processing and so on. Part 2 will cover cyclic generation ('walking') or ways to give AI models the ability to request new information, discover long-range relationships in the information and combine them for better results. If you're familiar with WalkingRAG, this part will cover the eponymous concept and show you how to do it yourself. Part 3 will go over transformations on the query and source data to improve retrieval performance. Let's start with the basics. The first problem we encounter in the question-answer scenario is that of search. It has long been theorized that the problem of intelligence is that of search ([1] [2] [3]) - that if you can organize and retrieve information about the world relevant to any problem, you've ",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/blog/hrishioa/retrieval-augmented-generation-1-basics"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Hugging Face \u2013 Blog",
+                                "url": "https://huggingface.co/blog",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "We\u2019re on a journey to advance and democratize artificial intelligence through open source and open science.\n\nBy ngxson \u2022 \u00b7 Oct 29, 2024 \u2022 132 \u00b7 By NormalUhr \u2022 \u00b7 Feb 7 \u2022 190 \u00b7 By Kseniase \u2022 \u00b7 Mar 17 \u2022 318 \u00b7 By pollen-robotics and 2 others \u2022 \u00b7 18 days ago \u2022 32 \u00b7 By fdaudens and 1 other \u2022 \u00b7 10 days ago \u2022 20 \u00b7 By nvidia \u2022 \u00b7 4 days ago \u2022 4 \u00b7 By giadap and 2 others \u2022 \u00b7 4 days ago \u2022 4 \u00b7 By davidberenstein1957 and 1 other \u2022 \u00b7 5 days ago \u2022 4 \u00b7 By TuringsSolutions \u2022 \u00b7 Feb 8, 2024 \u2022 14 \u00b7 By manu \u2022 \u00b7 Jul 5, 2024 \u2022 280 \u00b7 By mlabonne \u2022 \u00b7 Jul 29, 2024 \u2022 351 \u00b7 By Kseniase and 1 other \u2022 \u00b7 Feb 6 \u2022 99 \u00b7 By kszucs July 25, 2025 \u2022 18 \u00b7 By orrzohar July 23, 2025 \u2022 26 \u00b7 By sayakpaul July 23, 2025 \u2022 17 \u00b7 By FL33TW00D-HF July 18, 2025 \u2022 39 \u00b7 By azettl July 17, 2025 guest \u2022 16 \u00b7 By vinid July 17, 2025 guest \u2022 25 \u00b7 By freddyaboulton July 17, 2025 \u2022 18 \u00b7 By orionweller July 16, 2025 \u2022 45 \u00b7",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/blog"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Advanced RAG on Hugging Face documentation using LangChain - Hugging Face Open-Source AI Cookbook",
+                                "url": "https://huggingface.co/learn/cookbook/en/advanced_rag",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "We\u2019re on a journey to advance and democratize artificial intelligence through open source and open science.\n\nThis notebook demonstrates how you can build an advanced RAG (Retrieval Augmented Generation) for answering a user\u2019s question about a specific knowledge base (here, the HuggingFace documentation), using LangChain. For an introduction to RAG, you can check this other cookbook! RAG systems are complex, with many moving parts: here is a RAG diagram, where we noted in blue all possibilities for system enhancement: \ud83d\udca1 As you can see, there are many steps to tune in this architecture: tuning the system properly will yield significant performance gains. In this notebook, we will take a look into many of these blue notes to see how to tune your RAG system and get the best performance. Let\u2019s dig into the model building! First, we install the required model dependencies. ... !pip install -q torch transformers accelerate bitsandbytes langchain sentence-transformers faiss-cpu openpyxl pacmap datasets langchain-community ragatouille ...\n\nA good option for RAG is to retrieve more documents than you want in the end, then rerank the results with a more powerful retrieval model before keeping only the top_k. For this, Colbertv2 is a great choice: instead of a bi-encoder like our classical embedding models, it is a cross-encoder that computes more fine-grained interactions between the query tokens and each document\u2019s tokens. It is easily usable thanks to the RAGatouille library. ... from ragatouille import RAGPretrainedModel RERANKER = RAGPretrainedModel.from_pretrained(\"colbert-ir/colbertv2.0\") ...\n\n) >>> print(RAG_PROMPT_TEMPLATE) <|system|> Using the information contained in the context, give a comprehensive answer to the question. Respond only to the question asked, response should be concise and relevant to the question. Provide the number of the source document when relevant. If the answer cannot be deduced from the context, do not give an answer. <|user|> Context: &#123;context} --- Now here is the question you need to answer. Question: &#123;question} <|assistant|> Let\u2019s test our Reader on our previously retrieved documents!\n\nThe RAG prompt template below is what we will feed to the Reader LLM: it is important to have it formatted in the Reader LLM\u2019s chat template. We give it our context and the user\u2019s question. ... >>> prompt_in_chat_format = [ ... { ... \"role\": \"system\", ... \"content\": \"\"\"Using the information contained in the context, ... give a comprehensive answer to the question. ... Respond only to the question asked, response should be concise and relevant to the question. ... Provide the number of the source document when relevant. ... If the answer cannot be deduced from the context, do not give an answer.\"\"\", ... }, ... { ... \"role\": \"user\", ... \"content\": \"\"\"Context: ... {context} ... --- ... Now here is the question you need to answer. ... Question: {question}\"\"\", ... }, ... ] >>> RAG_PROMPT_TEMPLATE = tokenizer.apply_chat_template( ... prompt_in_chat_format, tokenize=False, add_generation_prompt=True ...",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/learn/cookbook/en/advanced_rag"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Retrieval Augmented Generation with Huggingface Transformers and Ray",
+                                "url": "https://huggingface.co/blog/ray-rag",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "We\u2019re on a journey to advance and democratize artificial intelligence through open source and open science.\n\nHuggingface Transformers recently added the Retrieval Augmented Generation (RAG) model, a new NLP architecture that leverages external documents (like Wikipedia) to augment its knowledge and achieve state of the art results on knowledge-intensive tasks. In this blog post, we introduce the integration of Ray, a library for building scalable applications, into the RAG contextual document retrieval mechanism. This speeds up retrieval calls by 2x and improves the scalability of RAG distributed fine-tuning. An overview of RAG. The model retrieves contextual documents from an external dataset as part of its execution. These contextual documents are used in conjunction with the original input to produce an output. The GIF is taken from Facebook's original blog post. Recently, Huggingface partnered with Facebook AI to introduce the RAG model as part of its Transformers library.\n\nTo overcome these limitations, we introduced a novel implementation of distributed retrieval based on Ray. With Ray\u2019s stateful actor abstractions, multiple processes that are separate from the training processes are used to load the index and handle the retrieval queries. With multiple Ray actors, retrieval is no longer a bottleneck and PyTorch is no longer a requirement for RAG. And as you can see below, using the Ray based implementation leads to better retrieval performance for multi-GPU fine-tuning. The following results show the seconds per retrieval call and we can see that as we increase the number of GPUs that we train on, using Ray has comparatively better performance than torch.distributed. Also, if we increase the number of Ray processes that perform retrieval, we also get better performance with more training workers since a single retrieval process is no longer a bottleneck.\n\nUsing RAG with Huggingface transformers and the Ray retrieval implementation for faster distributed fine-tuning, you can leverage RAG for retrieval-based generation on your own knowledge-intensive tasks. Also, hyperparameter tuning is another aspect of transformer fine tuning and can have huge impacts on accuracy. For scalable and easy hyperparameter tuning, check out the Ray Tune library. By using Ray Tune\u2019s integration with PyTorch Lightning, or the built-in integration with Huggingface transformers, you can run experiments to find the perfect hyperparameters for your RAG model. And lastly, stay tuned for a potential Tensorflow implementation of RAG on Huggingface! If you plan to try RAG+Ray integration out, please feel free to share your experiences on the Ray Discourse or join the Ray community Slack for further discussion -- we\u2019d love to hear from you!\n\nray start --head # A sample finetuning run, you need to specify data_dir, output_dir and model_name_or_path # run ./examples/rag/finetune_rag_ray.sh --help to see all the possible options python examples/rag/finetune_rag.py \\ --data_dir $DATA_DIR \\ --output_dir $OUTPUT_DIR \\ --model_name_or_path $MODEL_NAME_OR_PATH \\ --model_type rag_sequence \\ --fp16 \\ --gpus 8 \\ --profile \\ --do_train \\ --do_predict \\ --n_val -1 \\ --train_batch_size 8 \\ --eval_batch_size 1 \\ --max_source_length 128 \\ --max_target_length 25 \\ --val_max_target_length 25 \\ --test_max_target_length 25 \\ --label_smoothing 0.1 \\ --dropout 0.1 \\ --attention_dropout 0.1 \\ --weight_decay 0.001 \\ --adam_epsilon 1e-08 \\ --max_grad_norm 0.1 \\ --lr_scheduler polynomial \\ --learning_rate 3e-05 \\ --num_train_epochs 100 \\ --warmup_steps 500 \\ --gradient_accumulation_steps 1 \\ --distributed_retriever ray \\ --num_retrieval_workers 4 # Stop the Ray cluster.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/blog/ray-rag"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "RAG using huggingface tools",
+                                "url": "https://huggingface.co/blog/not-lain/rag-chatbot-using-llama3",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "huggingface.co",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=huggingface.co",
+                                    "site_name": "Hugging Face"
+                                },
+                                "is_missing": false,
+                                "text": "First let&#x27;s define what&#x27;s RAG: Retrieval-Augmented Generation. It&#x27;s a technique used in natural language processing (NLP) to improve the performance of language models by incorporating external knowledge sources, such as databases or search engines. The basic idea is to retrieve relevant information from an external source based on the input query \u00b7 for this blog, we require the following libraries:\n\nA Blog post by Hafedh Hichri on Hugging Face\n\nFirst let's define what's RAG: Retrieval-Augmented Generation. It's a technique used in natural language processing (NLP) to improve the performance of language models by incorporating external knowledge sources, such as databases or search engines. The basic idea is to retrieve relevant information from an external source based on the input query \u00b7 for this blog, we require the following libraries: pip install -q datasets sentence-transformers faiss-cpu accelerate \u00b7 This is a really slow process so we advise you to select a GPU \u00b7 this is a necessary step and it is by far the slowest one on our list, we recommend you embed your dataset and save it/push it to the hub to avoid doing it every time ... dataset # Let's checkout our dataset >>> DatasetDict({ train: Dataset({ features: ['id', 'url', 'title', 'text'], num_rows: 3000 }) }) then we load our embedding model, I'm going to go with mixedbread-ai/mxbai-embed-large-v1 \u00b7\n\nthe following work is a draft of what an RAG chatbot might look like : embed (only once) \u2502 \u2514\u2500\u2500 new query \u2502 \u2514\u2500\u2500 retrieve \u2502 \u2514\u2500\u2500\u2500 format prompt \u2502 \u2514\u2500\u2500 GenAI \u2502 \u2514\u2500\u2500 generate response \u00b7 Now let's strap everything together in a new session after embedding: pip install -q datasets sentence-transformers faiss-cpu accelerate bitsandbytes \u00b7\n\ndef format_prompt(prompt,retrieved_documents,k): \"\"\"using the retrieved documents we will prompt the model to generate our responses\"\"\" PROMPT = f\"Question:{prompt}\\nContext:\" for idx in range(k) : PROMPT+= f\"{retrieved_documents['text'][idx]}\\n\" return PROMPT def generate(formatted_prompt): formatted_prompt = formatted_prompt[:2000] # to avoid GPU OOM messages = [{\"role\":\"system\",\"content\":SYS_PROMPT},{\"role\":\"user\",\"content\":formatted_prompt}] # tell the model to generate input_ids = tokenizer.apply_chat_template( messages, add_generation_prompt=True, return_tensors=\"pt\" ).to(model.device) outputs = model.generate( input_ids, max_new_tokens=1024, eos_token_id=terminators, do_sample=True, temperature=0.6, top_p=0.9, ) response = outputs[0][input_ids.shape[-1]:] return tokenizer.decode(response, skip_special_tokens=True) def rag_chatbot(prompt:str,k:int=2): scores , retrieved_documents = search(prompt, k) formatted_prompt = format_prompt(prompt,retrieved_documents,k) return generate(fo",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface.co/blog/not-lain/rag-chatbot-using-llama3"
+                                }
+                            },
+                            {
+                                "type": "knowledge",
+                                "title": "Code a simple RAG from scratch",
+                                "url": "https://huggingface-co.translate.goog/blog/ngxson/make-your-own-rag?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc",
+                                "metadata": {
+                                    "type": "webpage_metadata",
+                                    "site_domain": "translate.goog",
+                                    "favicon_url": "https://www.google.com/s2/favicons?sz=64&domain=translate.goog",
+                                    "site_name": "Translate"
+                                },
+                                "is_missing": false,
+                                "text": "Recently, Retrieval-Augmented Generation (RAG) has emerged as a powerful paradigm in the field of AI and Large Language Models (LLMs). RAG combines information retrieval with text generation to enhance language models&#x27; performance by incorporating external knowledge sources. This approach has shown promising results in various applications, such as question answering, dialogue systems, and content generation \u00b7 In this blog post, we&#x27;ll explore RAG and build a simple RAG system from scratch using Python and ollama. This project will help you understand the key components of RAG systems and how t\n\nngxson \u00b7 Follow \u00b7 Recently, Retrieval-Augmented Generation (RAG) has emerged as a powerful paradigm in the field of AI and Large Language Models (LLMs). RAG combines information retrieval with text generation to enhance language models' performance by incorporating external knowledge sources. This approach has shown promising results in various applications, such as question answering, dialogue systems, and content generation. In this blog post, we'll explore RAG and build a simple RAG system from scratch using Python and ollama. This project will help you understand the key components of RAG systems and how they can be implemented using fundamental programming concepts. To begin, let's examine a simple chatbot system without RAG: While the chatbot can respond to common questions based on its training dataset, it may lack access to the most up-to-date or domain-specific knowledge.\n\nA Blog post by Xuan-Son Nguyen on Hugging Face\n\nThere are several ways to implement RAG, including Graph RAG, Hybrid RAG, and Hierarchical RAG, which we'll discuss at the end of this post. Let's create a simple RAG system that retrieves information from a predefined dataset and generates responses based on the retrieved knowledge. The system will comprise the following components: Embedding model: A pre-trained language model that converts input text into embeddings - vector representations that capture semantic meaning. These vectors will be used to search for relevant information in the dataset. Vector database: A storage system for knowledge and its corresponding embedding vectors. While there are many vector database technologies like Qdrant, Pinecone, and pgvector, we'll implement a simple in-memory database from scratch. Chatbot: A language model that generates responses based on retrieved knowledge.\n\nThe indexing phase is the first step in creating a RAG system. It involves breaking the dataset (or documents) into small chunks and calculating a vector representation for each chunk that can be efficiently searched during generation. The size of each chunk can vary depending on the dataset and the application. For example, in a document retrieval system, each chunk can be a paragraph or a sentence. In a dialogue system, each chunk can be a conversation turn. After the indexing phrase, each chunk with its corresponding embedding vector will be stored in the vector database. Here is an example of how the vector database might look like after indexing: The embedding vectors can be later used to retrieve relevant information based on a given query. Think of it as SQL WHERE clause, but instead of querying by exact text matching, we can now query a set of chunks based on their vector representations.",
+                                "is_citable": true,
+                                "prompt_context_metadata": {
+                                    "url": "https://huggingface-co.translate.goog/blog/ngxson/make-your-own-rag?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=tc"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": "<system>You only have 18 searches left this turn</system>\n\n",
+                                "uuid": "bfa0bc6d-6821-4dba-ade6-96f906ff0bb6"
+                            }
+                        ],
+                        "is_error": false,
+                        "message": null,
+                        "integration_name": null,
+                        "integration_icon_url": null,
+                        "display_content": null
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:48.840500Z",
+                        "stop_timestamp": "2025-07-27T18:44:51.838015Z",
+                        "type": "thinking",
+                        "thinking": "Perfect! I now have comprehensive information about the RAG code the user provided. Let me analyze the code step by step and explain how it works, what's required to run it, and provide a detailed breakdown.\n\nFrom the search results, I can see that:\n\n1. This is from a Hugging Face blog post by ngxson (Xuan-Son Nguyen) titled \"Code a simple RAG from scratch\"\n2. The code uses Ollama to run local LLM models\n3. It implements a basic RAG system with embedding models, vector database, and retrieval\n4. The main requirements are Ollama installation and specific models\n\nLet me provide a comprehensive explanation of how this RAG system works.",
+                        "summaries": [
+                            {
+                                "summary": "Analyzing code step by step and preparing explanation"
+                            },
+                            {
+                                "summary": "Analyzed RAG code, explained implementation and key requirements."
+                            }
+                        ],
+                        "cut_off": false
+                    },
+                    {
+                        "start_timestamp": "2025-07-27T18:44:52.076898Z",
+                        "stop_timestamp": "2025-07-27T18:45:12.452771Z",
+                        "type": "text",
+                        "text": "Now I understand this RAG system! This is a great example from ngxson's Hugging Face blog post that demonstrates building a simple Retrieval-Augmented Generation system from scratch using Python and Ollama. Let me break down how it works and what you need to run it.\n\n## What You Need to Run This Code\n\n**Prerequisites:**\n1. **Ollama installed** - Download from their official website and install it locally\n2. **Python 3** with the `ollama` library (`pip install ollama`)\n3. **The required models downloaded via Ollama:**\n   ```bash\n   ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf\n   ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF\n   ```\n4. **A text file called `cat-facts.txt`** with facts (one per line)\n\n## How the RAG System Works\n\nThis code implements a **3-phase RAG pipeline**:\n\n### **Phase 1: Indexing (Building the Vector Database)**\n```python\n# Each element in VECTOR_DB will be a tuple (chunk, embedding)\nVECTOR_DB = []\n\ndef add_chunk_to_database(chunk):\n  embedding = ollama.embed(model=EMBEDDING_MODEL, input=chunk)['embeddings'][0]\n  VECTOR_DB.append((chunk, embedding))\n```\n\n- **Loads your dataset**: Reads facts from `cat-facts.txt`\n- **Creates embeddings**: Uses the BGE embedding model to convert each text chunk into a vector representation that captures semantic meaning\n- **Stores in memory**: Creates a simple in-memory vector database as a list of tuples `(text_chunk, embedding_vector)`\n\n### **Phase 2: Retrieval (Finding Relevant Information)**\n```python\ndef retrieve(query, top_n=3):\n  query_embedding = ollama.embed(model=EMBEDDING_MODEL, input=query)['embeddings'][0]\n  similarities = []\n  for chunk, embedding in VECTOR_DB:\n    similarity = cosine_similarity(query_embedding, embedding)\n    similarities.append((chunk, similarity))\n  similarities.sort(key=lambda x: x[1], reverse=True)\n  return similarities[:top_n]\n```\n\n- **Embeds your question**: Converts your query into the same vector space\n- **Calculates similarity**: Uses cosine similarity to find which stored chunks are most semantically similar to your question\n- **Returns top matches**: Gets the 3 most relevant pieces of information\n\n### **Phase 3: Generation (Creating the Answer)**\n```python\ninstruction_prompt = f'''You are a helpful chatbot.\nUse only the following pieces of context to answer the question. Don't make up any new information:\n{'\\n'.join([f' - {chunk}' for chunk, similarity in retrieved_knowledge])}\n'''\n\nstream = ollama.chat(\n  model=LANGUAGE_MODEL,\n  messages=[\n    {'role': 'system', 'content': instruction_prompt},\n    {'role': 'user', 'content': input_query},\n  ]\n)\n```\n\n- **Builds context**: Takes the retrieved chunks and formats them as context\n- **Generates response**: Uses the Llama language model to generate responses based on the retrieved knowledge\n- **Constrains output**: The prompt specifically tells the model to only use the provided context\n\n## Key Concepts Explained\n\n**Vector Embeddings**: Think of it as SQL WHERE clause, but instead of querying by exact text matching, we can now query a set of chunks based on their vector representations\n\n**Cosine Similarity**: The math formula `cosine_similarity(a, b)` measures how \"similar\" two vectors are - closer to 1 means more similar, closer to 0 means less related.\n\n**RAG Benefits**: While the chatbot can respond to common questions based on its training dataset, it may lack access to the most up-to-date or domain-specific knowledge - RAG solves this by giving the model access to external information.\n\n## Limitations & Improvements\n\nThe current system has limitations: if the question covers multiple topics at the same time, the system may not be able to provide a good answer. This is because the system only retrieves chunks based on the similarity of the query to the chunks, without considering the context of the query.\n\n**Potential improvements:**\n- Use reranking models for better relevance\n- Implement query expansion \n- Add more sophisticated chunking strategies\n- Use persistent vector databases like ChromaDB or Weaviate\n\nThis is an excellent starting point for understanding RAG! The code is simple but demonstrates all the core concepts you'd find in production RAG systems.",
+                        "citations": [
+                            {
+                                "uuid": "cf786383-f173-4d46-a476-aa6eacb4dd21",
+                                "start_index": 63,
+                                "end_index": 187,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://huggingface.co/blog/ngxson/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "2ce886e2-2f08-4c0a-a245-539c59405c2e",
+                                "start_index": 63,
+                                "end_index": 187,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://blog.ngxson.com/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "693bdf89-f652-4fa8-88ee-04a6773a5aaf",
+                                "start_index": 348,
+                                "end_index": 407,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://www.datacamp.com/tutorial/llama-3-1-rag"
+                                }
+                            },
+                            {
+                                "uuid": "0fe54cbd-2111-431c-98f1-706c2c032967",
+                                "start_index": 1194,
+                                "end_index": 1309,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://huggingface.co/blog/ngxson/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "89972198-33da-4a6e-9e49-30799b3c24a8",
+                                "start_index": 2711,
+                                "end_index": 2795,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://huggingface.co/blog/ngxson/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "2b49bc35-3fe2-46f3-bb56-96a8c81ec443",
+                                "start_index": 2945,
+                                "end_index": 3096,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://huggingface.co/blog/ngxson/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "0cf6b877-c27f-45fd-a9ca-1497c3bd4ca6",
+                                "start_index": 3288,
+                                "end_index": 3439,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://blog.ngxson.com/make-your-own-rag"
+                                }
+                            },
+                            {
+                                "uuid": "74fdf551-7b81-4803-abe8-afc943a5bb41",
+                                "start_index": 3542,
+                                "end_index": 3833,
+                                "details": {
+                                    "type": "web_search_citation",
+                                    "url": "https://blog.ngxson.com/make-your-own-rag"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "sender": "assistant",
+                "created_at": "2025-07-27T18:45:12.488127Z",
+                "updated_at": "2025-07-27T18:45:12.488127Z",
+                "attachments": [],
+                "files": []
+            }
+        ]
+    }
+]
