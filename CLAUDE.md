@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a single-file web application called "LLM Chat Explorer" that provides a viewer for exported conversation data from ChatGPT and Claude. The entire application is contained in `exported_llm_chat_viewer.html` - a standalone HTML file with embedded CSS and JavaScript.
+This is a single-file web application called "LLM Chat Explorer" that provides a viewer for exported conversation data from ChatGPT and Claude. The entire application is contained in `llm-chat-explorer.html` - a standalone HTML file with embedded CSS and JavaScript.
 
 ## Architecture
 
