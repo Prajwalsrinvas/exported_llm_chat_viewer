@@ -80,10 +80,15 @@
             <input type="text" id="search-bar" placeholder="Search conversations..." class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <span id="clear-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
           </div>
-          <div class="search-options relative mx-4 text-xs pb-2.5 border-b border-gray-200 dark:border-slate-700">
-            <input type="checkbox" id="search-content-toggle">
-            <label for="search-content-toggle">Search within message content</label>
-            <select id="sort-chats" class="float-right bg-gray-50 dark:bg-slate-900 border-gray-300 dark:border-gray-600">
+          <div class="search-options relative mx-4 text-xs pb-2.5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span>Search within message content:</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="search-content-toggle" class="sr-only peer">
+                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+            <select id="sort-chats" class="bg-gray-50 dark:bg-slate-900 border-gray-300 dark:border-gray-600">
               <option value="newest">Sort by Date (Newest First)</option>
               <option value="oldest">Sort by Date (Oldest First)</option>
             </select>
@@ -138,11 +143,13 @@
       </div>
       <div class="setting-item flex justify-between items-center mb-5">
         <span class="label text-base text-gray-800 dark:text-gray-200">Chat position:</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="modal-chat-toggle" checked class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-        </label>
-        <span id="chat-position-text">At end</span>
+        <div class="flex items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="modal-chat-toggle" checked class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+          <span id="chat-position-text" class="text-sm text-gray-600 dark:text-gray-400">At end</span>
+        </div>
       </div>
     </div>
   </div>
@@ -394,8 +401,8 @@
               <span class="sender font-semibold text-sm">${window.currentService}</span>
             </div>
             <div class="message-content leading-relaxed">
-              ${formatMessage(msgObj.text)}
               ${renderThinkingContent(msgObj, msgIndex)}
+              ${formatMessage(getCleanedMessageText(msgObj))}
             </div>
           </div>`;
         }
@@ -425,6 +432,24 @@
       chatContent.scrollTop = scrollPreference === 'end' ? chatContent.scrollHeight : 0;
       }
 
+      function getCleanedMessageText(msgObj) {
+        if (!msgObj.isClaudeMessage || !msgObj.content) return msgObj.text || '';
+        
+        // Find thinking content to remove from text
+        const thinkingContent = msgObj.content.find(c => c.type === 'thinking');
+        if (!thinkingContent) return msgObj.text || '';
+        
+        let cleanedText = msgObj.text || '';
+        const thinkingText = thinkingContent.thinking || '';
+        
+        // Remove thinking content from the beginning of the text if it exists
+        if (thinkingText && cleanedText.startsWith(thinkingText)) {
+          cleanedText = cleanedText.substring(thinkingText.length).trim();
+        }
+        
+        return cleanedText;
+      }
+
       function renderThinkingContent(msgObj, msgIndex) {
         if (!msgObj.isClaudeMessage || !msgObj.content) return '';
         
@@ -433,7 +458,7 @@
         if (!thinkingContent) return '';
         
         return `
-          <div class="thinking-section mt-2.5 border border-gray-200 dark:border-slate-700 rounded-md bg-gray-50 dark:bg-slate-800/50 overflow-hidden">
+          <div class="thinking-section mb-3 border border-gray-200 dark:border-slate-700 rounded-md bg-gray-50 dark:bg-slate-800/50 overflow-hidden">
             <button class="thinking-toggle p-2 bg-gray-100 dark:bg-slate-800 border-none border-b border-gray-200 dark:border-slate-700 cursor-pointer text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5 w-full text-left hover:bg-gray-200 dark:hover:bg-slate-700">
               <i class="fas fa-chevron-right thinking-icon transition-transform duration-200"></i>
               💭 Show Thinking
