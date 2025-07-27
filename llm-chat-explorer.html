@@ -8,6 +8,28 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    /* Custom scrollbar styles */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.5);
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.8);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(75, 85, 99, 0.6);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.9);
+    }
+  </style>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -47,6 +69,13 @@
 
   <!-- Main app -->
   <div class="app-container h-screen overflow-hidden hidden">
+    <div id="chat-dark-toggle" class="absolute top-5 right-5 flex items-center gap-2 text-sm z-10">
+      <span>Dark mode:</span>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="chat-dark-toggle-input" class="sr-only peer">
+        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+      </label>
+    </div>
     <div class="flex h-full">
       <div class="sidebar w-[360px] bg-gray-50 dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col shadow-md">
         <div class="sidebar-header flex items-center justify-between p-5 border-b border-gray-200 dark:border-slate-700">
@@ -80,20 +109,22 @@
             <input type="text" id="search-bar" placeholder="Search conversations..." class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <span id="clear-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
           </div>
-          <div class="search-options relative mx-4 text-xs pb-2.5 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-              <span>Search within message content:</span>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="search-content-toggle" class="sr-only peer">
-                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
+          <div class="search-options relative mx-4 text-xs pb-2.5 border-b border-gray-200 dark:border-slate-700">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <span>Search within message content:</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="search-content-toggle" class="sr-only peer">
+                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              <select id="sort-chats" class="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs">
+                <option value="newest">Sort by Date (Newest First)</option>
+                <option value="oldest">Sort by Date (Oldest First)</option>
+              </select>
             </div>
-            <select id="sort-chats" class="bg-gray-50 dark:bg-slate-900 border-gray-300 dark:border-gray-600">
-              <option value="newest">Sort by Date (Newest First)</option>
-              <option value="oldest">Sort by Date (Oldest First)</option>
-            </select>
           </div>
-          <ul id="chat-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)]">
+          <ul id="chat-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
           </ul>
         </div>
         
@@ -103,7 +134,7 @@
             <input type="text" id="project-search" placeholder="Search projects..." class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <span id="clear-project-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
           </div>
-          <ul id="project-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)]">
+          <ul id="project-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
           </ul>
         </div>
       </div>
@@ -119,7 +150,7 @@
             <i class="fas fa-external-link-alt"></i> View on
           </a>
         </div>
-        <div id="chat-content" class="chat-messages flex-grow overflow-y-auto p-5 bg-white dark:bg-slate-800">
+        <div id="chat-content" class="chat-messages flex-grow overflow-y-auto p-5 bg-white dark:bg-slate-800 custom-scrollbar">
           <div class="empty-state flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center">
             <i class="fas fa-hand-point-left text-4xl mb-5"></i>
             <p class="text-base">Select a conversation from the list to view it</p>
@@ -129,18 +160,24 @@
     </div>
   </div>
 
+  <!-- Attachment content modal -->
+  <div id="attachment-modal" class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
+    <div class="modal-content bg-white dark:bg-slate-800 p-5 rounded-md w-11/12 max-w-4xl max-h-[80vh] relative overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="attachment-modal-title" class="text-lg font-semibold text-blue-600 dark:text-blue-400">Attachment Content</h2>
+        <span class="attachment-close-button text-2xl cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&times;</span>
+      </div>
+      <div id="attachment-modal-content" class="flex-1 overflow-auto custom-scrollbar bg-gray-50 dark:bg-slate-900 p-4 rounded border border-gray-200 dark:border-slate-700">
+        <pre class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300"></pre>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings modal -->
   <div id="settings-modal" class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
     <div class="modal-content bg-white dark:bg-slate-800 p-5 rounded-md w-11/12 max-w-md relative">
       <span class="close-button absolute right-4 top-4 text-2xl cursor-pointer">&times;</span>
       <h2 class="mb-5 text-blue-600 dark:text-blue-400">Settings</h2>
-      <div class="setting-item flex justify-between items-center mb-5">
-        <span class="label text-base text-gray-800 dark:text-gray-200">Dark mode:</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="modal-dark-toggle" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-        </label>
-      </div>
       <div class="setting-item flex justify-between items-center mb-5">
         <span class="label text-base text-gray-800 dark:text-gray-200">Chat position:</span>
         <div class="flex items-center gap-3">
@@ -221,6 +258,8 @@
           text: msg.text || '',
           role: role,
           content: msg.content || [],
+          attachments: msg.attachments || [],
+          files: msg.files || [],
           isClaudeMessage: true
         };
         messages.push(messageObj);
@@ -254,11 +293,7 @@
         createdTime = typeof chat.create_time === 'number' ? new Date(chat.create_time * 1000) : new Date(chat.create_time);
       }
 
-      let displayTitle = title;
-      if (createdTime) {
-        displayTitle += ` <span class='text-gray-500 dark:text-gray-400 text-xs ml-1 opacity-70'>${formatDate(createdTime)}</span>`;
-      }
-      chatListHTML += `<li data-id="${displayedChatIndex}" title="${title}" class="p-3.5 mb-1.5 cursor-pointer rounded-md transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis border-l-2 border-transparent text-sm hover:bg-gray-100 dark:hover:bg-slate-800 hover:border-blue-500">${displayTitle}</li>`;
+      chatListHTML += `<li data-id="${displayedChatIndex}" title="${title}" class="p-3.5 mb-1.5 cursor-pointer rounded-md transition-all duration-200 border-l-2 border-transparent text-sm hover:bg-gray-100 dark:hover:bg-slate-800 hover:border-blue-500"><div class="flex flex-col gap-1"><div class="font-medium truncate">${title}</div>${createdTime ? `<div class="text-gray-500 dark:text-gray-400 text-xs opacity-70">${formatDate(createdTime)}</div>` : ''}</div></li>`;
       chatData[displayedChatIndex] = {
         title: title,
         messages: messages,
@@ -391,7 +426,10 @@
               <div class="avatar w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white mr-3 text-sm font-semibold shadow-sm" title="User">U</div>
               <span class="sender font-semibold text-sm">You</span>
             </div>
-            <div class="message-content leading-relaxed">${formatMessage(msgObj.text)}</div>
+            <div class="message-content leading-relaxed">
+              ${renderAttachments(msgObj)}
+              ${formatMessage(msgObj.text)}
+            </div>
           </div>`;
         } else {
         html += `
@@ -401,6 +439,7 @@
               <span class="sender font-semibold text-sm">${window.currentService}</span>
             </div>
             <div class="message-content leading-relaxed">
+              ${renderAttachments(msgObj)}
               ${renderThinkingContent(msgObj, msgIndex)}
               ${formatMessage(getCleanedMessageText(msgObj))}
             </div>
@@ -427,6 +466,18 @@
         });
       });
       
+      // Add click handlers for attachment view buttons
+      document.querySelectorAll('.view-attachment-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          const filename = button.getAttribute('data-filename');
+          const content = decodeURIComponent(button.getAttribute('data-content'));
+          
+          document.getElementById('attachment-modal-title').textContent = filename;
+          document.querySelector('#attachment-modal-content pre').textContent = content;
+          document.getElementById('attachment-modal').style.display = 'flex';
+        });
+      });
+      
       const scrollPreference = localStorage.getItem('chatPosition') || 'end';
       const chatContent = document.getElementById("chat-content");
       chatContent.scrollTop = scrollPreference === 'end' ? chatContent.scrollHeight : 0;
@@ -450,6 +501,54 @@
         return cleanedText;
       }
 
+      function renderAttachments(msgObj) {
+        if (!msgObj.attachments && !msgObj.files) return '';
+        
+        const attachments = msgObj.attachments || [];
+        const files = msgObj.files || [];
+        // Combine and deduplicate based on filename
+        const allFiles = [];
+        const seen = new Set();
+        
+        [...attachments, ...files].forEach(file => {
+          const filename = file.file_name || file.filename || 'Unknown file';
+          if (!seen.has(filename)) {
+            seen.add(filename);
+            allFiles.push(file);
+          }
+        });
+        
+        if (allFiles.length === 0) return '';
+        
+        return `
+          <div class="attachments-section mb-3 border border-gray-200 dark:border-slate-700 rounded-md bg-gray-50 dark:bg-slate-800/50 p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-paperclip text-gray-500 dark:text-gray-400"></i>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">${allFiles.length} attachment${allFiles.length > 1 ? 's' : ''}</span>
+            </div>
+            ${allFiles.map((file, index) => `
+              <div class="attachment-item p-2 bg-white dark:bg-slate-700 rounded border border-gray-200 dark:border-slate-600 mb-2 last:mb-0">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-file-alt text-blue-500 dark:text-blue-400"></i>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate">${file.file_name || file.filename || 'Unknown file'}</div>
+                    ${file.file_size ? `<div class="text-xs text-gray-500 dark:text-gray-400">${(file.file_size / 1024).toFixed(1)} KB</div>` : ''}
+                    ${file.file_type ? `<div class="text-xs text-gray-500 dark:text-gray-400 capitalize">${file.file_type}</div>` : ''}
+                  </div>
+                </div>
+                ${file.extracted_content ? `
+                  <button class="view-attachment-btn mt-2 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200" 
+                          data-filename="${file.file_name || file.filename || 'Unknown file'}" 
+                          data-content="${encodeURIComponent(file.extracted_content)}">
+                    View content
+                  </button>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
       function renderThinkingContent(msgObj, msgIndex) {
         if (!msgObj.isClaudeMessage || !msgObj.content) return '';
         
@@ -458,23 +557,77 @@
         if (!thinkingContent) return '';
         
         return `
-          <div class="thinking-section mb-3 border border-gray-200 dark:border-slate-700 rounded-md bg-gray-50 dark:bg-slate-800/50 overflow-hidden">
-            <button class="thinking-toggle p-2 bg-gray-100 dark:bg-slate-800 border-none border-b border-gray-200 dark:border-slate-700 cursor-pointer text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5 w-full text-left hover:bg-gray-200 dark:hover:bg-slate-700">
-              <i class="fas fa-chevron-right thinking-icon transition-transform duration-200"></i>
-              💭 Show Thinking
+          <div class="thinking-section mb-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 overflow-hidden shadow-sm">
+            <button class="thinking-toggle p-3 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-800/30 dark:to-indigo-800/30 border-none cursor-pointer text-sm text-purple-700 dark:text-purple-300 flex items-center gap-2 w-full text-left hover:from-purple-200 hover:to-indigo-200 dark:hover:from-purple-700/40 dark:hover:to-indigo-700/40 transition-all duration-200">
+              <i class="fas fa-chevron-right thinking-icon transition-transform duration-200 text-purple-600 dark:text-purple-400"></i>
+              <span class="flex items-center gap-2">
+                <span class="text-lg">🧠</span>
+                <span class="font-medium">Show Thinking Process</span>
+                <span class="ml-auto text-xs opacity-75 bg-purple-200 dark:bg-purple-800 px-2 py-1 rounded-full">Internal reasoning</span>
+              </span>
             </button>
-            <div class="thinking-content p-3 text-xs text-gray-700 dark:text-gray-300 leading-normal border-t border-gray-200 dark:border-slate-700 hidden">
-              ${formatMessage(thinkingContent.thinking || '')}
+            <div class="thinking-content p-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed bg-white/50 dark:bg-slate-800/50 hidden">
+              <div class="border-l-4 border-purple-400 dark:border-purple-500 pl-4">
+                ${formatMessage(thinkingContent.thinking || '')}
+              </div>
             </div>
           </div>
         `;
       }
       function formatMessage(text) {
       if (!text) return '';
-      // Convert links and code blocks
-      text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-500 dark:text-blue-400">$1</a>');
-      text = text.replace(/```([^`]+)```/g, '<pre class="bg-gray-100 dark:bg-slate-900 p-4 rounded-md overflow-x-auto">$1</pre>');
-      text = text.replace(/\n/g, '<br>');
+      
+      // Escape HTML first to prevent injection, but preserve our markdown
+      text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      
+      // Enhanced markdown support
+      // Code blocks (must come before inline code) - improved language detection
+      text = text.replace(/```([a-zA-Z0-9_+-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        // List of valid programming languages to prevent false detection
+        const validLanguages = ['javascript', 'js', 'python', 'py', 'java', 'cpp', 'c', 'csharp', 'cs', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'typescript', 'ts', 'html', 'css', 'scss', 'sql', 'bash', 'shell', 'json', 'xml', 'yaml', 'markdown', 'md', 'r', 'matlab', 'scala', 'perl', 'lua', 'dart', 'haskell', 'clojure', 'elixir', 'elm', 'fsharp', 'ocaml', 'scheme', 'racket', 'erlang', 'prolog'];
+        const isValidLang = lang && validLanguages.includes(lang.toLowerCase());
+        const langClass = isValidLang ? ` language-${lang.toLowerCase()}` : '';
+        return `<pre class="bg-gray-100 dark:bg-slate-900 p-4 rounded-md overflow-x-auto border border-gray-200 dark:border-slate-700 my-4"><code class="text-sm${langClass}">${code}</code></pre>`;
+      });
+      
+      // Inline code
+      text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-slate-900 px-2 py-1 rounded text-sm font-mono border border-gray-200 dark:border-slate-700">$1</code>');
+      
+      // Bold text
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>');
+      text = text.replace(/__([^_]+)__/g, '<strong class="font-bold">$1</strong>');
+      
+      // Italic text
+      text = text.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
+      text = text.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
+      
+      // Headers
+      text = text.replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h3>');
+      text = text.replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h2>');
+      text = text.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h1>');
+      
+      // Lists (unordered)
+      text = text.replace(/^[\s]*[-*+] (.+)$/gm, '<li class="ml-4 list-disc list-inside">$1</li>');
+      text = text.replace(/(<li[^>]*>.*<\/li>)/s, '<ul class="my-3 space-y-1">$1</ul>');
+      
+      // Lists (ordered)
+      text = text.replace(/^[\s]*\d+\. (.+)$/gm, '<li class="ml-4 list-decimal list-inside">$1</li>');
+      
+      // Links (must come after code to avoid conflicts)
+      text = text.replace(/(https?:\/\/[^\s&lt;&gt;]+)/g, '<a href="$1" target="_blank" class="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline">$1</a>');
+      
+      // Blockquotes
+      text = text.replace(/^&gt; (.+)$/gm, '<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 my-3">$1</blockquote>');
+      
+      // Convert paragraphs (double newlines) to proper paragraphs with spacing
+      text = text.replace(/\n\n+/g, '</p><p class="mb-3">');
+      text = '<p class="mb-3">' + text + '</p>';
+      
+      // Convert single newlines to line breaks only within paragraphs
+      text = text.replace(/(?<!<\/p>)\n(?!<p)/g, '<br>');
+      
+      // Clean up empty paragraphs
+      text = text.replace(/<p class="mb-3"><\/p>/g, '');
       
       // Highlight searched words in the content if the checkbox is active
       const searchTerm = document.getElementById("search-bar").value.toLowerCase().trim();
@@ -844,12 +997,24 @@
       document.querySelector("#settings-modal .close-button").addEventListener("click", () => {
       document.getElementById("settings-modal").style.display = "none";
       });
+      
+      // Attachment modal: close by clicking the X
+      document.querySelector("#attachment-modal .attachment-close-button").addEventListener("click", () => {
+        document.getElementById("attachment-modal").style.display = "none";
+      });
+      
+      // Close modals by clicking outside
+      document.getElementById("attachment-modal").addEventListener("click", (e) => {
+        if (e.target.id === "attachment-modal") {
+          document.getElementById("attachment-modal").style.display = "none";
+        }
+      });
       // Open modal from settings
       document.getElementById("open-settings").addEventListener("click", () => {
       document.getElementById("settings-modal").style.display = "flex";
       });
-      // Toggle dark mode in modal
-      document.getElementById("modal-dark-toggle").addEventListener("change", (e) => {
+      // Toggle dark mode in chat page
+      document.getElementById("chat-dark-toggle-input").addEventListener("change", (e) => {
         if (e.target.checked) {
           document.documentElement.classList.add('dark');
           localStorage.setItem('darkMode', 'true');
@@ -877,7 +1042,7 @@
       // Set saved settings from localStorage
       if (localStorage.getItem('darkMode') === 'true') {
         document.documentElement.classList.add('dark');
-        document.getElementById("modal-dark-toggle").checked = true;
+        document.getElementById("chat-dark-toggle-input").checked = true;
         const landingToggle = document.getElementById("landing-dark-toggle-input");
         if(landingToggle) landingToggle.checked = true;
       }
@@ -894,13 +1059,13 @@
         if (e.target.checked) {
           document.documentElement.classList.add('dark');
           localStorage.setItem('darkMode', 'true');
-          const modalToggle = document.getElementById("modal-dark-toggle");
-          if (modalToggle) modalToggle.checked = true;
+          const chatToggle = document.getElementById("chat-dark-toggle-input");
+          if (chatToggle) chatToggle.checked = true;
         } else {
           document.documentElement.classList.remove('dark');
           localStorage.setItem('darkMode', 'false');
-          const modalToggle = document.getElementById("modal-dark-toggle");
-          if (modalToggle) modalToggle.checked = false;
+          const chatToggle = document.getElementById("chat-dark-toggle-input");
+          if (chatToggle) chatToggle.checked = false;
         }
       });
     });
