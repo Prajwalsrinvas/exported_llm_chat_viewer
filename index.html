@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LLM Chat Explorer</title>
-  <meta name="description" content="LLM Chat Explorer is a web application that allows you to view and analyze conversation exports from ChatGPT and Claude, offering an intuitive interface to manage chat history.">
+  <meta name="description"
+    content="LLM Chat Explorer is a web application that allows you to view and analyze conversation exports from ChatGPT and Claude, offering an intuitive interface to manage chat history.">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -13,19 +15,24 @@
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
     }
+
     .custom-scrollbar::-webkit-scrollbar-track {
       background: transparent;
     }
+
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background: rgba(156, 163, 175, 0.5);
       border-radius: 3px;
     }
+
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(156, 163, 175, 0.8);
     }
+
     .dark .custom-scrollbar::-webkit-scrollbar-thumb {
       background: rgba(75, 85, 99, 0.6);
     }
+
     .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(75, 85, 99, 0.9);
     }
@@ -36,6 +43,7 @@
     }
   </script>
 </head>
+
 <body class="bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 font-sans">
 
   <!-- Progress bar -->
@@ -49,17 +57,21 @@
       <span>Dark mode:</span>
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" id="landing-dark-toggle-input" class="sr-only peer">
-        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+        </div>
       </label>
     </div>
-    
-    <div id="upload-area" class="cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-12 text-center max-w-lg w-full transition-all duration-300 bg-white dark:bg-slate-800 shadow-md hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-500 dark:hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-xl">
+
+    <div id="upload-area"
+      class="cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-12 text-center max-w-lg w-full transition-all duration-300 bg-white dark:bg-slate-800 shadow-md hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-500 dark:hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-xl">
       <h1 class="inline-flex items-center gap-3 text-2xl text-blue-600 dark:text-blue-400 mb-5">
         <i class="fas fa-comments text-3xl"></i>
         <span>LLM Chat Explorer</span>
       </h1>
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Upload the export of your chat data from ChatGPT or Claude to view and analyze conversations in an intuitive and user-friendly interface.
+        Upload the export of your chat data from ChatGPT or Claude to view and analyze conversations in an intuitive and
+        user-friendly interface.
       </p>
       <br>
       <p class="text-base text-gray-800 dark:text-gray-200 mt-2">Drag and drop JSON or ZIP files or click to select</p>
@@ -73,17 +85,23 @@
       <span>Dark mode:</span>
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" id="chat-dark-toggle-input" class="sr-only peer">
-        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+        </div>
       </label>
     </div>
     <div class="flex h-full">
-      <div class="sidebar w-[360px] bg-gray-50 dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col shadow-md">
-        <div class="sidebar-header flex items-center justify-between p-5 border-b border-gray-200 dark:border-slate-700">
-          <h1 class="inline-flex items-center gap-3 text-lg text-blue-600 dark:text-blue-400 cursor-pointer" onclick="location.reload();" title="Click here to reload the page">
+      <div
+        class="sidebar w-[360px] bg-gray-50 dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col shadow-md">
+        <div
+          class="sidebar-header flex items-center justify-between p-5 border-b border-gray-200 dark:border-slate-700">
+          <h1 class="inline-flex items-center gap-3 text-lg text-blue-600 dark:text-blue-400 cursor-pointer"
+            onclick="location.reload();" title="Click here to reload the page">
             <i class="fas fa-comments"></i> LLM Chat Explorer
           </h1>
         </div>
-        <div id="chat-counter" class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 px-5 py-1">
+        <div id="chat-counter"
+          class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 px-5 py-1">
           <div class="chat-info flex items-center gap-1.5">
             <i class="fas fa-chart-bar"></i>
             <span id="chat-counter-text">0 chats total</span>
@@ -93,21 +111,27 @@
             <i class="fas fa-gear"></i>
           </div>
         </div>
-        
+
         <div class="tab-container flex border-b border-gray-200 dark:border-slate-700">
-          <button class="tab-button flex-1 p-2.5 text-sm text-gray-500 dark:text-gray-400 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 active" id="conversations-tab">
+          <button
+            class="tab-button flex-1 p-2.5 text-sm text-gray-500 dark:text-gray-400 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800 active"
+            id="conversations-tab">
             <i class="fas fa-comments"></i> Conversations
           </button>
-          <button class="tab-button flex-1 p-2.5 text-sm text-gray-500 dark:text-gray-400 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800" id="projects-tab">
+          <button
+            class="tab-button flex-1 p-2.5 text-sm text-gray-500 dark:text-gray-400 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-slate-800"
+            id="projects-tab">
             <i class="fas fa-folder"></i> Projects
           </button>
         </div>
-        
+
         <div id="conversations-content" class="tab-content flex-grow flex-col">
           <div class="search-container relative m-4">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="search-bar" placeholder="Search conversations..." class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <span id="clear-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
+            <input type="text" id="search-bar" placeholder="Search conversations..."
+              class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span id="clear-search"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
           </div>
           <div class="search-options relative mx-4 text-xs pb-2.5 border-b border-gray-200 dark:border-slate-700">
             <div class="flex items-center justify-between gap-4">
@@ -115,43 +139,54 @@
                 <span>Search within message content:</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" id="search-content-toggle" class="sr-only peer">
-                  <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div
+                    class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                  </div>
                 </label>
               </div>
-              <select id="sort-chats" class="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs">
+              <select id="sort-chats"
+                class="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs">
                 <option value="newest">Sort by Date (Newest First)</option>
                 <option value="oldest">Sort by Date (Oldest First)</option>
               </select>
             </div>
           </div>
-          <ul id="chat-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
+          <ul id="chat-list"
+            class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
           </ul>
         </div>
-        
+
         <div id="projects-content" class="tab-content flex-grow flex-col hidden">
           <div class="search-container relative m-4">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="project-search" placeholder="Search projects..." class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <span id="clear-project-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
+            <input type="text" id="project-search" placeholder="Search projects..."
+              class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-md text-sm transition-all duration-200 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span id="clear-project-search"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hidden w-5 h-5 leading-5 text-center rounded-full bg-gray-300 dark:bg-gray-500 hover:bg-gray-400 dark:hover:bg-gray-600">&times;</span>
           </div>
-          <ul id="project-list" class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
+          <ul id="project-list"
+            class="list-none overflow-y-auto flex-grow p-2.5 max-h-[calc(100vh-250px)] custom-scrollbar">
           </ul>
         </div>
       </div>
       <div class="content flex-grow flex flex-col overflow-hidden">
-        <div class="content-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+        <div
+          class="content-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
           <div class="flex items-center gap-2">
             <h2 id="chat-title" class="text-lg font-semibold m-0">Select a chat</h2>
             <button id="share-button" title="Share chat" class="bg-none border-none cursor-pointer">
               <i class="fas fa-share"></i>
             </button>
           </div>
-          <a id="chat-link" href="#" target="_blank" class="external-link hidden items-center gap-1.5 text-blue-600 dark:text-blue-300 no-underline text-sm transition-opacity duration-200 px-3 py-1.5 rounded-md bg-blue-50 dark:bg-slate-700 hover:opacity-80">
+          <a id="chat-link" href="#" target="_blank"
+            class="external-link hidden items-center gap-1.5 text-blue-600 dark:text-blue-300 no-underline text-sm transition-opacity duration-200 px-3 py-1.5 rounded-md bg-blue-50 dark:bg-slate-700 hover:opacity-80">
             <i class="fas fa-external-link-alt"></i> View on
           </a>
         </div>
-        <div id="chat-content" class="chat-messages flex-grow overflow-y-auto p-5 bg-white dark:bg-slate-800 custom-scrollbar">
-          <div class="empty-state flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center">
+        <div id="chat-content"
+          class="chat-messages flex-grow overflow-y-auto p-5 bg-white dark:bg-slate-800 custom-scrollbar">
+          <div
+            class="empty-state flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center">
             <i class="fas fa-hand-point-left text-4xl mb-5"></i>
             <p class="text-base">Select a conversation from the list to view it</p>
           </div>
@@ -161,20 +196,26 @@
   </div>
 
   <!-- Attachment content modal -->
-  <div id="attachment-modal" class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
-    <div class="modal-content bg-white dark:bg-slate-800 p-5 rounded-md w-11/12 max-w-4xl max-h-[80vh] relative overflow-hidden flex flex-col">
+  <div id="attachment-modal"
+    class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
+    <div
+      class="modal-content bg-white dark:bg-slate-800 p-5 rounded-md w-11/12 max-w-4xl max-h-[80vh] relative overflow-hidden flex flex-col">
       <div class="flex items-center justify-between mb-4">
-        <h2 id="attachment-modal-title" class="text-lg font-semibold text-blue-600 dark:text-blue-400">Attachment Content</h2>
-        <span class="attachment-close-button text-2xl cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&times;</span>
+        <h2 id="attachment-modal-title" class="text-lg font-semibold text-blue-600 dark:text-blue-400">Attachment
+          Content</h2>
+        <span
+          class="attachment-close-button text-2xl cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&times;</span>
       </div>
-      <div id="attachment-modal-content" class="flex-1 overflow-auto custom-scrollbar bg-gray-50 dark:bg-slate-900 p-4 rounded border border-gray-200 dark:border-slate-700">
+      <div id="attachment-modal-content"
+        class="flex-1 overflow-auto custom-scrollbar bg-gray-50 dark:bg-slate-900 p-4 rounded border border-gray-200 dark:border-slate-700">
         <pre class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300"></pre>
       </div>
     </div>
   </div>
 
   <!-- Settings modal -->
-  <div id="settings-modal" class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
+  <div id="settings-modal"
+    class="hidden fixed z-50 left-0 top-0 w-full h-full overflow-auto bg-black/50 justify-center items-center">
     <div class="modal-content bg-white dark:bg-slate-800 p-5 rounded-md w-11/12 max-w-md relative">
       <span class="close-button absolute right-4 top-4 text-2xl cursor-pointer">&times;</span>
       <h2 class="mb-5 text-blue-600 dark:text-blue-400">Settings</h2>
@@ -183,7 +224,9 @@
         <div class="flex items-center gap-3">
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="modal-chat-toggle" checked class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+            </div>
           </label>
           <span id="chat-position-text" class="text-sm text-gray-600 dark:text-gray-400">At end</span>
         </div>
@@ -208,15 +251,15 @@
     function processData(data) {
       let conversations = [];
       if (Array.isArray(data)) {
-      conversations = data;
+        conversations = data;
       } else {
-      conversations = data.conversations || [];
+        conversations = data.conversations || [];
       }
 
       // If the file is in Claude format (i.e., if the first object contains the property chat_messages), the order is from oldest to newest.
       // Reverse the array to have the same order (from most recent to oldest) as ChatGPT to normalize the chat flow display.
       if (conversations.length > 0 && conversations[0].chat_messages) {
-      conversations.reverse();
+        conversations.reverse();
       }
 
       // Save the original total globally for reference
@@ -227,200 +270,200 @@
       let displayedChatIndex = 0;
 
       conversations.forEach((chat, originalIndex) => {
-      // Skip chats with empty names - don't consider chats having "name": ""
-      if ((chat.title === "" || chat.title === null || chat.title === undefined) && 
+        // Skip chats with empty names - don't consider chats having "name": ""
+        if ((chat.title === "" || chat.title === null || chat.title === undefined) &&
           (chat.name === "" || chat.name === null || chat.name === undefined)) {
-        return; // Skip this chat
-      }
-      
-      // Use 'title' (ChatGPT) or 'name' (Claude) for the title
-      let title = chat.title || chat.name || `Chat ${displayedChatIndex + 1}`;
-      let messages = [];
-      let service = "ChatGPT"; // default
-      let uuid = null;
-      let conversation_id = null;
+          return; // Skip this chat
+        }
 
-      // If the format is Claude (field "chat_messages")
-      if (chat.chat_messages) {
-        service = "Claude";
-        uuid = chat.uuid; // from Claude
-        chat.chat_messages.forEach((msg) => {
-        // Map the role based on the sender field
-        let role = "";
-        if (msg.sender) {
-          role = msg.sender === "human" ? "user" : "assistant";
-        } else {
-          role = "assistant"; // default
-        }
-        
-        // For Claude messages, store the full message object for thinking content
-        const messageObj = {
-          text: msg.text || '',
-          role: role,
-          content: msg.content || [],
-          attachments: msg.attachments || [],
-          files: msg.files || [],
-          isClaudeMessage: true
-        };
-        messages.push(messageObj);
-        });
-      }
-      // If the format is ChatGPT with mapping
-      else if (chat.mapping) {
-        if (chat.conversation_id) {
-        conversation_id = chat.conversation_id;
-        }
-        for (let key in chat.mapping) {
-        const messageObj = chat.mapping[key];
-        if (messageObj.message && messageObj.message.content) {
-          // Extract the role from the author.role field (default to "assistant" if not present)
-          const role = messageObj.message.author && messageObj.message.author.role ? messageObj.message.author.role : "assistant";
-          const parts = messageObj.message.content.parts || [];
-          parts.forEach((part) => {
-          if (typeof part === 'string' && part.trim() !== '') {
-            messages.push({ text: part, role: role });
-          }
+        // Use 'title' (ChatGPT) or 'name' (Claude) for the title
+        let title = chat.title || chat.name || `Chat ${displayedChatIndex + 1}`;
+        let messages = [];
+        let service = "ChatGPT"; // default
+        let uuid = null;
+        let conversation_id = null;
+
+        // If the format is Claude (field "chat_messages")
+        if (chat.chat_messages) {
+          service = "Claude";
+          uuid = chat.uuid; // from Claude
+          chat.chat_messages.forEach((msg) => {
+            // Map the role based on the sender field
+            let role = "";
+            if (msg.sender) {
+              role = msg.sender === "human" ? "user" : "assistant";
+            } else {
+              role = "assistant"; // default
+            }
+
+            // For Claude messages, store the full message object for thinking content
+            const messageObj = {
+              text: msg.text || '',
+              role: role,
+              content: msg.content || [],
+              attachments: msg.attachments || [],
+              files: msg.files || [],
+              isClaudeMessage: true
+            };
+            messages.push(messageObj);
           });
         }
+        // If the format is ChatGPT with mapping
+        else if (chat.mapping) {
+          if (chat.conversation_id) {
+            conversation_id = chat.conversation_id;
+          }
+          for (let key in chat.mapping) {
+            const messageObj = chat.mapping[key];
+            if (messageObj.message && messageObj.message.content) {
+              // Extract the role from the author.role field (default to "assistant" if not present)
+              const role = messageObj.message.author && messageObj.message.author.role ? messageObj.message.author.role : "assistant";
+              const parts = messageObj.message.content.parts || [];
+              parts.forEach((part) => {
+                if (typeof part === 'string' && part.trim() !== '') {
+                  messages.push({ text: part, role: role });
+                }
+              });
+            }
+          }
         }
-      }
 
-      // Handle creation date (Claude uses "created_at")
-      let createdTime = null;
-      if (chat.created_at) {
-        createdTime = new Date(chat.created_at);
-      } else if (chat.create_time) {
-        createdTime = typeof chat.create_time === 'number' ? new Date(chat.create_time * 1000) : new Date(chat.create_time);
-      }
+        // Handle creation date (Claude uses "created_at")
+        let createdTime = null;
+        if (chat.created_at) {
+          createdTime = new Date(chat.created_at);
+        } else if (chat.create_time) {
+          createdTime = typeof chat.create_time === 'number' ? new Date(chat.create_time * 1000) : new Date(chat.create_time);
+        }
 
-      chatListHTML += `<li data-id="${displayedChatIndex}" title="${title}" class="p-3.5 mb-1.5 cursor-pointer rounded-md transition-all duration-200 border-l-2 border-transparent text-sm hover:bg-gray-100 dark:hover:bg-slate-800 hover:border-blue-500"><div class="flex flex-col gap-1"><div class="font-medium truncate">${title}</div>${createdTime ? `<div class="text-gray-500 dark:text-gray-400 text-xs opacity-70">${formatDate(createdTime)}</div>` : ''}</div></li>`;
-      chatData[displayedChatIndex] = {
-        title: title,
-        messages: messages,
-        created_time: createdTime ? formatDate(createdTime) : "",
-        service: service,
-        uuid: uuid,
-        conversation_id: conversation_id
-      };
-      displayedChatIndex++;
+        chatListHTML += `<li data-id="${displayedChatIndex}" title="${title}" class="p-3.5 mb-1.5 cursor-pointer rounded-md transition-all duration-200 border-l-2 border-transparent text-sm hover:bg-gray-100 dark:hover:bg-slate-800 hover:border-blue-500"><div class="flex flex-col gap-1"><div class="font-medium truncate">${title}</div>${createdTime ? `<div class="text-gray-500 dark:text-gray-400 text-xs opacity-70">${formatDate(createdTime)}</div>` : ''}</div></li>`;
+        chatData[displayedChatIndex] = {
+          title: title,
+          messages: messages,
+          created_time: createdTime ? formatDate(createdTime) : "",
+          service: service,
+          uuid: uuid,
+          conversation_id: conversation_id
+        };
+        displayedChatIndex++;
       });
 
       // Update the total chats count to reflect displayed chats
       window.totalChats = displayedChatIndex;
-      
+
       document.getElementById("chat-list").innerHTML = chatListHTML;
       Array.from(document.getElementById("chat-list").children).forEach(li => {
         li.setAttribute("data-original", li.innerHTML);
       });
       if (conversations.length > 0) {
-      // If the first object contains "chat_messages", the file is from Claude, otherwise ChatGPT
-      let serviceType = (conversations[0].chat_messages) ? "Claude" : "ChatGPT";
-      window.currentService = serviceType; // Save the service globally
-      document.getElementById("service-label").textContent = "Source: " + serviceType;
+        // If the first object contains "chat_messages", the file is from Claude, otherwise ChatGPT
+        let serviceType = (conversations[0].chat_messages) ? "Claude" : "ChatGPT";
+        window.currentService = serviceType; // Save the service globally
+        document.getElementById("service-label").textContent = "Source: " + serviceType;
       }
       const searchBar = document.getElementById("search-bar");
       const clearSearch = document.getElementById("clear-search");
 
       searchBar.addEventListener("input", () => {
-      const searchTerm = searchBar.value.toLowerCase().trim();
-      clearSearch.style.display = searchTerm !== "" ? "block" : "none";
-      const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
-      const searchInContent = document.getElementById("search-content-toggle").checked;
-      let visibleCount = 0; // variable to count visible chats
+        const searchTerm = searchBar.value.toLowerCase().trim();
+        clearSearch.style.display = searchTerm !== "" ? "block" : "none";
+        const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
+        const searchInContent = document.getElementById("search-content-toggle").checked;
+        let visibleCount = 0; // variable to count visible chats
 
-      Array.from(document.getElementById("chat-list").children).forEach(li => {
-        const chatId = li.getAttribute("data-id");
-        const chat = chatData[chatId];
-        const titleText = chat.title.toLowerCase();
-        // Check the title
-        const titleMatches = words.every(word => titleText.includes(word));
-        let contentMatches = false;
-        if (searchInContent && chat.messages) {
-        contentMatches = chat.messages.some(msgObj => {
-          return words.every(word => msgObj.text.toLowerCase().includes(word));
+        Array.from(document.getElementById("chat-list").children).forEach(li => {
+          const chatId = li.getAttribute("data-id");
+          const chat = chatData[chatId];
+          const titleText = chat.title.toLowerCase();
+          // Check the title
+          const titleMatches = words.every(word => titleText.includes(word));
+          let contentMatches = false;
+          if (searchInContent && chat.messages) {
+            contentMatches = chat.messages.some(msgObj => {
+              return words.every(word => msgObj.text.toLowerCase().includes(word));
+            });
+          }
+          const matches = titleMatches || contentMatches;
+          li.style.display = matches ? "" : "none";
+          if (matches) {
+            visibleCount++;
+            // Highlight in the title (if applicable)
+            if (titleMatches && words.length > 0) {
+              let newHTML = li.getAttribute("data-original");
+              words.forEach(word => {
+                const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\\\]/g, '\\$&')})`, 'gi');
+                newHTML = newHTML.replace(regex, `<span class="bg-blue-100 dark:bg-blue-900/50 font-bold">$1</span>`);
+              });
+              li.innerHTML = newHTML;
+            } else {
+              li.innerHTML = li.getAttribute("data-original");
+            }
+          }
         });
-        }
-        const matches = titleMatches || contentMatches;
-        li.style.display = matches ? "" : "none";
-        if (matches) {
-        visibleCount++;
-        // Highlight in the title (if applicable)
-        if (titleMatches && words.length > 0) {
-          let newHTML = li.getAttribute("data-original");
-          words.forEach(word => {
-          const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\\\]/g, '\\$&')})`, 'gi');
-          newHTML = newHTML.replace(regex, `<span class="bg-blue-100 dark:bg-blue-900/50 font-bold">$1</span>`);
-          });
-          li.innerHTML = newHTML;
+
+        // Update the counter: "visible of total chats total"
+        if (visibleCount === window.totalChats) {
+          document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
         } else {
-          li.innerHTML = li.getAttribute("data-original");
+          document.getElementById("chat-counter-text").textContent = visibleCount + " of " + window.totalChats + " chats total";
         }
+
+        // If a chat is active, also update the message content
+        const activeLi = document.querySelector(".chat-list li.active");
+        if (activeLi) {
+          const activeChatId = activeLi.getAttribute("data-id");
+          renderMessages(chatData[activeChatId].messages);
         }
-      });
-      
-      // Update the counter: "visible of total chats total"
-      if (visibleCount === window.totalChats) {
-        document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
-      } else {
-        document.getElementById("chat-counter-text").textContent = visibleCount + " of " + window.totalChats + " chats total";
-      }
-      
-      // If a chat is active, also update the message content
-      const activeLi = document.querySelector(".chat-list li.active");
-      if (activeLi) {
-        const activeChatId = activeLi.getAttribute("data-id");
-        renderMessages(chatData[activeChatId].messages);
-      }
       });
       // Add this listener to update the search when the checkbox changes:
       document.getElementById("search-content-toggle").addEventListener("change", () => {
-      // Simulate the "input" event on the search field to update the results
-      searchBar.dispatchEvent(new Event("input"));
+        // Simulate the "input" event on the search field to update the results
+        searchBar.dispatchEvent(new Event("input"));
       });
       clearSearch.addEventListener("click", () => {
-      searchBar.value = "";
-      clearSearch.style.display = "none";
-      Array.from(document.getElementById("chat-list").children).forEach(li => {
-        li.style.display = "";
-        li.innerHTML = li.getAttribute("data-original");
-      });
-      searchBar.focus();
-      // Update the counter to show the total, as the filter has been removed
-      document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
+        searchBar.value = "";
+        clearSearch.style.display = "none";
+        Array.from(document.getElementById("chat-list").children).forEach(li => {
+          li.style.display = "";
+          li.innerHTML = li.getAttribute("data-original");
+        });
+        searchBar.focus();
+        // Update the counter to show the total, as the filter has been removed
+        document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
       });
       document.getElementById("chat-list").addEventListener("click", (event) => {
-      const clickedLi = event.target.closest("li");
-      if (!clickedLi) return;
-      Array.from(document.getElementById("chat-list").children).forEach(li => {
-        li.classList.remove("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
-      });
-      clickedLi.classList.add("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
-      const chatId = clickedLi.getAttribute("data-id");
-      const chat = chatData[chatId];
-      document.getElementById("chat-title").textContent = chat.title;
-      const chatLink = document.getElementById("chat-link");
-      if (chat.url) {
-        chatLink.href = chat.url;
-        chatLink.style.display = "inline-flex";
-      } else {
-        chatLink.style.display = "none";
-      }
-      if (chat.messages && chat.messages.length > 0) {
-        renderMessages(chat.messages);
-      } else {
-        document.getElementById("chat-content").innerHTML = `
+        const clickedLi = event.target.closest("li");
+        if (!clickedLi) return;
+        Array.from(document.getElementById("chat-list").children).forEach(li => {
+          li.classList.remove("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
+        });
+        clickedLi.classList.add("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
+        const chatId = clickedLi.getAttribute("data-id");
+        const chat = chatData[chatId];
+        document.getElementById("chat-title").textContent = chat.title;
+        const chatLink = document.getElementById("chat-link");
+        if (chat.url) {
+          chatLink.href = chat.url;
+          chatLink.style.display = "inline-flex";
+        } else {
+          chatLink.style.display = "none";
+        }
+        if (chat.messages && chat.messages.length > 0) {
+          renderMessages(chat.messages);
+        } else {
+          document.getElementById("chat-content").innerHTML = `
         <div class="empty-state flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center">
           <i class="fas fa-comment-slash text-4xl mb-5"></i>
           <p>Select a conversation from the list to view it</p>
         </div>`;
-      }
+        }
       });
       function renderMessages(messages) {
-      let html = '';
-      messages.forEach((msgObj, msgIndex) => {
-        const role = msgObj.role || "assistant"; // fallback
-        if (role === "user") {
-        html += `
+        let html = '';
+        messages.forEach((msgObj, msgIndex) => {
+          const role = msgObj.role || "assistant"; // fallback
+          if (role === "user") {
+            html += `
           <div class="message message-user mb-6 p-5 rounded-xl shadow-sm ml-16 border border-gray-200 dark:border-slate-700 bg-blue-50 dark:bg-slate-700/50 border-l-4 border-blue-500">
             <div class="message-header flex items-center mb-2">
               <div class="avatar w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white mr-3 text-sm font-semibold shadow-sm" title="User">U</div>
@@ -431,8 +474,8 @@
               ${formatMessage(msgObj.text)}
             </div>
           </div>`;
-        } else {
-        html += `
+          } else {
+            html += `
           <div class="message message-assistant mb-6 p-5 rounded-xl shadow-sm mr-16 border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50">
             <div class="message-header flex items-center mb-2">
               <div class="avatar w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white mr-3 text-sm font-semibold shadow-sm" title="Assistant">A</div>
@@ -444,72 +487,72 @@
               ${formatMessage(getCleanedMessageText(msgObj))}
             </div>
           </div>`;
-        }
-      });
-      document.getElementById("chat-content").innerHTML = html;
-      
-      // Add click handlers for thinking toggles
-      document.querySelectorAll('.thinking-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-          const content = toggle.nextElementSibling;
-          const icon = toggle.querySelector('.thinking-icon');
-          
-          if (content.classList.contains('expanded')) {
-            content.classList.remove('expanded', 'block');
-            content.classList.add('hidden');
-            icon.classList.remove('expanded', 'rotate-90');
-          } else {
-            content.classList.add('expanded', 'block');
-            content.classList.remove('hidden');
-            icon.classList.add('expanded', 'rotate-90');
           }
         });
-      });
-      
-      // Add click handlers for attachment view buttons
-      document.querySelectorAll('.view-attachment-btn').forEach(button => {
-        button.addEventListener('click', () => {
-          const filename = button.getAttribute('data-filename');
-          const content = decodeURIComponent(button.getAttribute('data-content'));
-          
-          document.getElementById('attachment-modal-title').textContent = filename;
-          document.querySelector('#attachment-modal-content pre').textContent = content;
-          document.getElementById('attachment-modal').style.display = 'flex';
+        document.getElementById("chat-content").innerHTML = html;
+
+        // Add click handlers for thinking toggles
+        document.querySelectorAll('.thinking-toggle').forEach(toggle => {
+          toggle.addEventListener('click', () => {
+            const content = toggle.nextElementSibling;
+            const icon = toggle.querySelector('.thinking-icon');
+
+            if (content.classList.contains('expanded')) {
+              content.classList.remove('expanded', 'block');
+              content.classList.add('hidden');
+              icon.classList.remove('expanded', 'rotate-90');
+            } else {
+              content.classList.add('expanded', 'block');
+              content.classList.remove('hidden');
+              icon.classList.add('expanded', 'rotate-90');
+            }
+          });
         });
-      });
-      
-      const scrollPreference = localStorage.getItem('chatPosition') || 'end';
-      const chatContent = document.getElementById("chat-content");
-      chatContent.scrollTop = scrollPreference === 'end' ? chatContent.scrollHeight : 0;
+
+        // Add click handlers for attachment view buttons
+        document.querySelectorAll('.view-attachment-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            const filename = button.getAttribute('data-filename');
+            const content = decodeURIComponent(button.getAttribute('data-content'));
+
+            document.getElementById('attachment-modal-title').textContent = filename;
+            document.querySelector('#attachment-modal-content pre').textContent = content;
+            document.getElementById('attachment-modal').style.display = 'flex';
+          });
+        });
+
+        const scrollPreference = localStorage.getItem('chatPosition') || 'end';
+        const chatContent = document.getElementById("chat-content");
+        chatContent.scrollTop = scrollPreference === 'end' ? chatContent.scrollHeight : 0;
       }
 
       function getCleanedMessageText(msgObj) {
         if (!msgObj.isClaudeMessage || !msgObj.content) return msgObj.text || '';
-        
+
         // Find thinking content to remove from text
         const thinkingContent = msgObj.content.find(c => c.type === 'thinking');
         if (!thinkingContent) return msgObj.text || '';
-        
+
         let cleanedText = msgObj.text || '';
         const thinkingText = thinkingContent.thinking || '';
-        
+
         // Remove thinking content from the beginning of the text if it exists
         if (thinkingText && cleanedText.startsWith(thinkingText)) {
           cleanedText = cleanedText.substring(thinkingText.length).trim();
         }
-        
+
         return cleanedText;
       }
 
       function renderAttachments(msgObj) {
         if (!msgObj.attachments && !msgObj.files) return '';
-        
+
         const attachments = msgObj.attachments || [];
         const files = msgObj.files || [];
         // Combine and deduplicate based on filename
         const allFiles = [];
         const seen = new Set();
-        
+
         [...attachments, ...files].forEach(file => {
           const filename = file.file_name || file.filename || 'Unknown file';
           if (!seen.has(filename)) {
@@ -517,9 +560,9 @@
             allFiles.push(file);
           }
         });
-        
+
         if (allFiles.length === 0) return '';
-        
+
         return `
           <div class="attachments-section mb-3 border border-gray-200 dark:border-slate-700 rounded-md bg-gray-50 dark:bg-slate-800/50 p-3">
             <div class="flex items-center gap-2 mb-2">
@@ -551,11 +594,11 @@
 
       function renderThinkingContent(msgObj, msgIndex) {
         if (!msgObj.isClaudeMessage || !msgObj.content) return '';
-        
+
         // Find thinking content
         const thinkingContent = msgObj.content.find(c => c.type === 'thinking');
         if (!thinkingContent) return '';
-        
+
         return `
           <div class="thinking-section mb-3 border border-gray-200 dark:border-slate-700 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 overflow-hidden shadow-sm">
             <button class="thinking-toggle p-3 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-800/30 dark:to-indigo-800/30 border-none cursor-pointer text-sm text-purple-700 dark:text-purple-300 flex items-center gap-2 w-full text-left hover:from-purple-200 hover:to-indigo-200 dark:hover:from-purple-700/40 dark:hover:to-indigo-700/40 transition-all duration-200">
@@ -575,73 +618,73 @@
         `;
       }
       function formatMessage(text) {
-      if (!text) return '';
-      
-      // Escape HTML first to prevent injection, but preserve our markdown
-      text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      
-      // Enhanced markdown support
-      // Code blocks (must come before inline code) - improved language detection
-      text = text.replace(/```([a-zA-Z0-9_+-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-        // List of valid programming languages to prevent false detection
-        const validLanguages = ['javascript', 'js', 'python', 'py', 'java', 'cpp', 'c', 'csharp', 'cs', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'typescript', 'ts', 'html', 'css', 'scss', 'sql', 'bash', 'shell', 'json', 'xml', 'yaml', 'markdown', 'md', 'r', 'matlab', 'scala', 'perl', 'lua', 'dart', 'haskell', 'clojure', 'elixir', 'elm', 'fsharp', 'ocaml', 'scheme', 'racket', 'erlang', 'prolog'];
-        const isValidLang = lang && validLanguages.includes(lang.toLowerCase());
-        const langClass = isValidLang ? ` language-${lang.toLowerCase()}` : '';
-        return `<pre class="bg-gray-100 dark:bg-slate-900 p-4 rounded-md overflow-x-auto border border-gray-200 dark:border-slate-700 my-4"><code class="text-sm${langClass}">${code}</code></pre>`;
-      });
-      
-      // Inline code
-      text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-slate-900 px-2 py-1 rounded text-sm font-mono border border-gray-200 dark:border-slate-700">$1</code>');
-      
-      // Bold text
-      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>');
-      text = text.replace(/__([^_]+)__/g, '<strong class="font-bold">$1</strong>');
-      
-      // Italic text
-      text = text.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
-      text = text.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
-      
-      // Headers
-      text = text.replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h3>');
-      text = text.replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h2>');
-      text = text.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h1>');
-      
-      // Lists (unordered)
-      text = text.replace(/^[\s]*[-*+] (.+)$/gm, '<li class="ml-4 list-disc list-inside">$1</li>');
-      text = text.replace(/(<li[^>]*>.*<\/li>)/s, '<ul class="my-3 space-y-1">$1</ul>');
-      
-      // Lists (ordered)
-      text = text.replace(/^[\s]*\d+\. (.+)$/gm, '<li class="ml-4 list-decimal list-inside">$1</li>');
-      
-      // Links (must come after code to avoid conflicts)
-      text = text.replace(/(https?:\/\/[^\s&lt;&gt;]+)/g, '<a href="$1" target="_blank" class="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline">$1</a>');
-      
-      // Blockquotes
-      text = text.replace(/^&gt; (.+)$/gm, '<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 my-3">$1</blockquote>');
-      
-      // Convert paragraphs (double newlines) to proper paragraphs with spacing
-      text = text.replace(/\n\n+/g, '</p><p class="mb-3">');
-      text = '<p class="mb-3">' + text + '</p>';
-      
-      // Convert single newlines to line breaks only within paragraphs
-      text = text.replace(/(?<!<\/p>)\n(?!<p)/g, '<br>');
-      
-      // Clean up empty paragraphs
-      text = text.replace(/<p class="mb-3"><\/p>/g, '');
-      
-      // Highlight searched words in the content if the checkbox is active
-      const searchTerm = document.getElementById("search-bar").value.toLowerCase().trim();
-      const searchInContent = document.getElementById("search-content-toggle") && document.getElementById("search-content-toggle").checked;
-      if (searchTerm && searchInContent) {
-        const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
-        words.forEach(word => {
-        const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\\\]/g, '\\$&')})`, 'gi');
-        text = text.replace(regex, `<span class="bg-blue-100 dark:bg-blue-900/50 font-bold">$1</span>`);
+        if (!text) return '';
+
+        // Escape HTML first to prevent injection, but preserve our markdown
+        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        // Enhanced markdown support
+        // Code blocks (must come before inline code) - improved language detection
+        text = text.replace(/```([a-zA-Z0-9_+-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+          // List of valid programming languages to prevent false detection
+          const validLanguages = ['javascript', 'js', 'python', 'py', 'java', 'cpp', 'c', 'csharp', 'cs', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'typescript', 'ts', 'html', 'css', 'scss', 'sql', 'bash', 'shell', 'json', 'xml', 'yaml', 'markdown', 'md', 'r', 'matlab', 'scala', 'perl', 'lua', 'dart', 'haskell', 'clojure', 'elixir', 'elm', 'fsharp', 'ocaml', 'scheme', 'racket', 'erlang', 'prolog'];
+          const isValidLang = lang && validLanguages.includes(lang.toLowerCase());
+          const langClass = isValidLang ? ` language-${lang.toLowerCase()}` : '';
+          return `<pre class="bg-gray-100 dark:bg-slate-900 p-4 rounded-md overflow-x-auto border border-gray-200 dark:border-slate-700 my-4"><code class="text-sm${langClass}">${code}</code></pre>`;
         });
+
+        // Inline code
+        text = text.replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-slate-900 px-2 py-1 rounded text-sm font-mono border border-gray-200 dark:border-slate-700">$1</code>');
+
+        // Bold text
+        text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold">$1</strong>');
+        text = text.replace(/__([^_]+)__/g, '<strong class="font-bold">$1</strong>');
+
+        // Italic text
+        text = text.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
+        text = text.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
+
+        // Headers
+        text = text.replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h3>');
+        text = text.replace(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h2>');
+        text = text.replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3 text-gray-800 dark:text-gray-200">$1</h1>');
+
+        // Lists (unordered)
+        text = text.replace(/^[\s]*[-*+] (.+)$/gm, '<li class="ml-4 list-disc list-inside">$1</li>');
+        text = text.replace(/(<li[^>]*>.*<\/li>)/s, '<ul class="my-3 space-y-1">$1</ul>');
+
+        // Lists (ordered)
+        text = text.replace(/^[\s]*\d+\. (.+)$/gm, '<li class="ml-4 list-decimal list-inside">$1</li>');
+
+        // Links (must come after code to avoid conflicts)
+        text = text.replace(/(https?:\/\/[^\s&lt;&gt;]+)/g, '<a href="$1" target="_blank" class="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline">$1</a>');
+
+        // Blockquotes
+        text = text.replace(/^&gt; (.+)$/gm, '<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 my-3">$1</blockquote>');
+
+        // Convert paragraphs (double newlines) to proper paragraphs with spacing
+        text = text.replace(/\n\n+/g, '</p><p class="mb-3">');
+        text = '<p class="mb-3">' + text + '</p>';
+
+        // Convert single newlines to line breaks only within paragraphs
+        text = text.replace(/(?<!<\/p>)\n(?!<p)/g, '<br>');
+
+        // Clean up empty paragraphs
+        text = text.replace(/<p class="mb-3"><\/p>/g, '');
+
+        // Highlight searched words in the content if the checkbox is active
+        const searchTerm = document.getElementById("search-bar").value.toLowerCase().trim();
+        const searchInContent = document.getElementById("search-content-toggle") && document.getElementById("search-content-toggle").checked;
+        if (searchTerm && searchInContent) {
+          const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
+          words.forEach(word => {
+            const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\\\]/g, '\\$&')})`, 'gi');
+            text = text.replace(regex, `<span class="bg-blue-100 dark:bg-blue-900/50 font-bold">$1</span>`);
+          });
+        }
+        return text;
       }
-      return text;
-      }
-    
+
       // Update the chat counter if defined
       document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
 
@@ -675,43 +718,43 @@
 
     function attachChatListClickHandler(chatData) {
       document.getElementById("chat-list").addEventListener("click", (event) => {
-      const clickedLi = event.target.closest("li");
-      if (!clickedLi) return;
-      Array.from(document.getElementById("chat-list").children).forEach(li => {
-        li.classList.remove("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
-      });
-      clickedLi.classList.add("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
-      const chatId = clickedLi.getAttribute("data-id");
-      const chat = chatData[chatId];
-      document.getElementById("chat-title").textContent = chat.title;
-      const chatLink = document.getElementById("chat-link");
+        const clickedLi = event.target.closest("li");
+        if (!clickedLi) return;
+        Array.from(document.getElementById("chat-list").children).forEach(li => {
+          li.classList.remove("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
+        });
+        clickedLi.classList.add("active", "bg-blue-50", "dark:bg-slate-700", "border-blue-500", "font-semibold", "shadow-sm");
+        const chatId = clickedLi.getAttribute("data-id");
+        const chat = chatData[chatId];
+        document.getElementById("chat-title").textContent = chat.title;
+        const chatLink = document.getElementById("chat-link");
 
-      // Only show the link if there are messages
-      if (chat.messages && chat.messages.length > 0) {
-        if (chat.service === "Claude" && chat.uuid) {
-        chatLink.href = "https://claude.ai/chat/" + chat.uuid;
-        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on Claude';
-        chatLink.style.display = "inline-flex";
-        } else if (chat.service === "ChatGPT" && chat.conversation_id) {
-        chatLink.href = "https://chat.openai.com/c/" + chat.conversation_id;
-        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on ChatGPT';
-        chatLink.style.display = "inline-flex";
+        // Only show the link if there are messages
+        if (chat.messages && chat.messages.length > 0) {
+          if (chat.service === "Claude" && chat.uuid) {
+            chatLink.href = "https://claude.ai/chat/" + chat.uuid;
+            chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on Claude';
+            chatLink.style.display = "inline-flex";
+          } else if (chat.service === "ChatGPT" && chat.conversation_id) {
+            chatLink.href = "https://chat.openai.com/c/" + chat.conversation_id;
+            chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on ChatGPT';
+            chatLink.style.display = "inline-flex";
+          } else {
+            chatLink.style.display = "none";
+          }
         } else {
-        chatLink.style.display = "none";
+          chatLink.style.display = "none";
         }
-      } else {
-        chatLink.style.display = "none";
-      }
 
-      if (chat.messages && chat.messages.length > 0) {
-        renderMessages(chat.messages);
-      } else {
-        document.getElementById("chat-content").innerHTML = `
+        if (chat.messages && chat.messages.length > 0) {
+          renderMessages(chat.messages);
+        } else {
+          document.getElementById("chat-content").innerHTML = `
         <div class="empty-state flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-center">
           <i class="fas fa-comment-slash text-4xl mb-5"></i>
           <p>Select a conversation from the list to view it</p>
         </div>`;
-      }
+        }
       });
     }
 
@@ -720,14 +763,14 @@
       try {
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(file);
-        
+
         let conversations = [];
         let projects = [];
-        
+
         // Look for conversations.json and projects.json files
         for (const filename in zipContents.files) {
           const zipFile = zipContents.files[filename];
-          
+
           if (filename.endsWith('conversations.json') && !zipFile.dir) {
             const content = await zipFile.async('text');
             const data = JSON.parse(content);
@@ -746,7 +789,7 @@
             }
           }
         }
-        
+
         return { conversations, projects };
       } catch (e) {
         throw new Error("Error processing ZIP file: " + e.message);
@@ -758,15 +801,15 @@
       const loadingOverlay = document.getElementById('loading-overlay');
       const loadingBar = document.getElementById('loading-bar');
       loadingOverlay.style.display = 'block';
-      
+
       try {
         let allConversations = [];
         let allProjects = [];
-        
+
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           loadingBar.style.width = Math.floor((i / files.length) * 100) + '%';
-          
+
           if (file.name.endsWith('.zip')) {
             const { conversations, projects } = await processZipFile(file);
             allConversations = allConversations.concat(conversations);
@@ -774,7 +817,7 @@
           } else if (file.name.endsWith('.json')) {
             const text = await file.text();
             const data = JSON.parse(text);
-            
+
             // Detect format and add to appropriate array
             if (Array.isArray(data)) {
               allConversations = allConversations.concat(data);
@@ -790,17 +833,17 @@
             }
           }
         }
-        
+
         // Store projects globally for later use
         window.allProjects = allProjects;
-        
+
         document.getElementById('upload-wrapper').style.display = 'none';
         document.querySelector('.app-container').style.display = 'flex';
         loadingOverlay.style.display = 'none';
-        
+
         processData(allConversations);
         renderProjects();
-        
+
       } catch (e) {
         alert("File processing error: " + e.message);
         loadingOverlay.style.display = 'none';
@@ -812,7 +855,7 @@
       // Remove active class from all tabs and content
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active', 'text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-500'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-      
+
       // Add active class to clicked tab and corresponding content
       const tabButton = document.getElementById(tabName + '-tab');
       tabButton.classList.add('active', 'text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-500');
@@ -826,13 +869,13 @@
         projectList.innerHTML = '<li class="p-5 text-center text-gray-500 dark:text-gray-400">No projects found</li>';
         return;
       }
-      
+
       let html = '';
       window.allProjects.forEach((project, index) => {
         const name = project.name || `Project ${index + 1}`;
         const description = project.description || '';
         const createdDate = project.created_at ? formatDate(new Date(project.created_at)) : '';
-        
+
         html += `
           <li class="project-item p-3 mb-1.5 cursor-pointer rounded-md transition-all duration-200 border-l-2 border-transparent hover:bg-gray-100 dark:hover:bg-slate-800 hover:border-blue-500" data-project-id="${index}">
             <div class="project-name font-semibold">${name}</div>
@@ -841,27 +884,27 @@
           </li>
         `;
       });
-      
+
       projectList.innerHTML = html;
-      
+
       // Store original HTML for search functionality
       Array.from(projectList.children).forEach(li => {
         li.setAttribute("data-original", li.innerHTML);
       });
-      
+
       // Add click handlers for projects
       projectList.addEventListener('click', (e) => {
         const projectItem = e.target.closest('.project-item');
         if (!projectItem) return;
-        
+
         // Remove active class from other projects
         document.querySelectorAll('.project-item').forEach(item => item.classList.remove('active', 'bg-blue-50', 'dark:bg-slate-700', 'border-blue-500'));
         projectItem.classList.add('active', 'bg-blue-50', 'dark:bg-slate-700', 'border-blue-500');
-        
+
         const projectId = projectItem.getAttribute('data-project-id');
         displayProject(window.allProjects[projectId]);
       });
-      
+
       // Add project search functionality
       setupProjectSearch();
     }
@@ -871,10 +914,10 @@
       const chatTitle = document.getElementById('chat-title');
       const chatContent = document.getElementById('chat-content');
       const chatLink = document.getElementById('chat-link');
-      
+
       chatTitle.textContent = project.name || 'Project';
       chatLink.style.display = 'none';
-      
+
       let html = `
         <div class="p-5">
           <h3 class="text-xl font-semibold">Project: ${project.name || 'Unnamed Project'}</h3>
@@ -907,7 +950,7 @@
           ` : ''}
         </div>
       `;
-      
+
       chatContent.innerHTML = html;
     }
 
@@ -915,26 +958,26 @@
     function setupProjectSearch() {
       const projectSearchBar = document.getElementById("project-search");
       const clearProjectSearch = document.getElementById("clear-project-search");
-      
+
       projectSearchBar.addEventListener("input", () => {
         const searchTerm = projectSearchBar.value.toLowerCase().trim();
         clearProjectSearch.style.display = searchTerm !== "" ? "block" : "none";
         const words = searchTerm.split(/\s+/).filter(word => word.length > 0);
-        
+
         Array.from(document.getElementById("project-list").children).forEach(li => {
           const projectId = li.getAttribute("data-project-id");
           if (projectId !== null && window.allProjects && window.allProjects[projectId]) {
             const project = window.allProjects[projectId];
             const nameText = (project.name || '').toLowerCase();
             const descriptionText = (project.description || '').toLowerCase();
-            
+
             // Check if search terms match name or description
-            const matches = words.every(word => 
+            const matches = words.every(word =>
               nameText.includes(word) || descriptionText.includes(word)
             );
-            
+
             li.style.display = matches ? "" : "none";
-            
+
             if (matches && words.length > 0) {
               // Highlight matching terms
               let newHTML = li.getAttribute("data-original");
@@ -949,7 +992,7 @@
           }
         });
       });
-      
+
       clearProjectSearch.addEventListener("click", () => {
         projectSearchBar.value = "";
         clearProjectSearch.style.display = "none";
@@ -964,45 +1007,45 @@
     document.addEventListener("DOMContentLoaded", () => {
       const uploadArea = document.getElementById('upload-area');
       const jsonFileInput = document.getElementById('json-file');
-      
+
       // Tab switching
       document.getElementById('conversations-tab').addEventListener('click', () => switchTab('conversations'));
       document.getElementById('projects-tab').addEventListener('click', () => switchTab('projects'));
-      
+
       uploadArea.addEventListener("click", () => {
-      jsonFileInput.click();
+        jsonFileInput.click();
       });
       uploadArea.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('hover');
+        e.preventDefault();
+        uploadArea.classList.add('hover');
       });
       uploadArea.addEventListener("dragleave", (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('hover');
+        e.preventDefault();
+        uploadArea.classList.remove('hover');
       });
       uploadArea.addEventListener("drop", (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('hover');
-      const files = e.dataTransfer.files;
-      if (files.length) {
-        handleFiles(Array.from(files));
-      }
+        e.preventDefault();
+        uploadArea.classList.remove('hover');
+        const files = e.dataTransfer.files;
+        if (files.length) {
+          handleFiles(Array.from(files));
+        }
       });
       jsonFileInput.addEventListener("change", (e) => {
-      if (e.target.files.length) {
-        handleFiles(Array.from(e.target.files));
-      }
+        if (e.target.files.length) {
+          handleFiles(Array.from(e.target.files));
+        }
       });
       // Modal: close by clicking the X
       document.querySelector("#settings-modal .close-button").addEventListener("click", () => {
-      document.getElementById("settings-modal").style.display = "none";
+        document.getElementById("settings-modal").style.display = "none";
       });
-      
+
       // Attachment modal: close by clicking the X
       document.querySelector("#attachment-modal .attachment-close-button").addEventListener("click", () => {
         document.getElementById("attachment-modal").style.display = "none";
       });
-      
+
       // Close modals by clicking outside
       document.getElementById("attachment-modal").addEventListener("click", (e) => {
         if (e.target.id === "attachment-modal") {
@@ -1011,7 +1054,7 @@
       });
       // Open modal from settings
       document.getElementById("open-settings").addEventListener("click", () => {
-      document.getElementById("settings-modal").style.display = "flex";
+        document.getElementById("settings-modal").style.display = "flex";
       });
       // Toggle dark mode in chat page
       document.getElementById("chat-dark-toggle-input").addEventListener("change", (e) => {
@@ -1029,22 +1072,22 @@
       });
       // Toggle chat position in modal
       document.getElementById("modal-chat-toggle").addEventListener("change", (e) => {
-      if (e.target.checked) {
-        localStorage.setItem('chatPosition', 'end');
-      } else {
-        localStorage.setItem('chatPosition', 'start');
-      }
-      document.getElementById("chat-position-text").textContent = e.target.checked ? "At end" : "At start";
-      // If a chat is already displayed, update the scroll
-      const chatContent = document.getElementById("chat-content");
-      chatContent.scrollTop = e.target.checked ? chatContent.scrollHeight : 0;
+        if (e.target.checked) {
+          localStorage.setItem('chatPosition', 'end');
+        } else {
+          localStorage.setItem('chatPosition', 'start');
+        }
+        document.getElementById("chat-position-text").textContent = e.target.checked ? "At end" : "At start";
+        // If a chat is already displayed, update the scroll
+        const chatContent = document.getElementById("chat-content");
+        chatContent.scrollTop = e.target.checked ? chatContent.scrollHeight : 0;
       });
       // Set saved settings from localStorage
       if (localStorage.getItem('darkMode') === 'true') {
         document.documentElement.classList.add('dark');
         document.getElementById("chat-dark-toggle-input").checked = true;
         const landingToggle = document.getElementById("landing-dark-toggle-input");
-        if(landingToggle) landingToggle.checked = true;
+        if (landingToggle) landingToggle.checked = true;
       }
       if (localStorage.getItem('chatPosition') === 'end') {
         document.getElementById("modal-chat-toggle").checked = true;
@@ -1053,7 +1096,7 @@
         document.getElementById("modal-chat-toggle").checked = false;
         document.getElementById("chat-position-text").textContent = "At start";
       }
-      
+
       // Landing page dark mode toggle
       document.getElementById("landing-dark-toggle-input").addEventListener("change", (e) => {
         if (e.target.checked) {
@@ -1071,7 +1114,7 @@
     });
 
     // Event for the share button: copy the chat title + ChatGPT/Claude link to clipboard
-    document.getElementById("share-button").addEventListener("click", function() {
+    document.getElementById("share-button").addEventListener("click", function () {
       const chatTitle = document.getElementById("chat-title").textContent;
       const chatLink = document.getElementById("chat-link").href;
       // Add a colon and a space between title and link
@@ -1085,14 +1128,14 @@
         document.body.appendChild(notification);
         // Make the message appear
         setTimeout(() => {
-        notification.style.opacity = "1";
+          notification.style.opacity = "1";
         }, 10);
         // After 2 seconds, fade out and remove the element
         setTimeout(() => {
-        notification.style.opacity = "0";
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 1000);
+          notification.style.opacity = "0";
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 1000);
         }, 2000);
       }).catch(err => {
         console.error("Error copying information: " + err);
@@ -1100,4 +1143,5 @@
     });
   </script>
 </body>
+
 </html>
