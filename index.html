@@ -302,11 +302,25 @@
         <i class="fas fa-comments text-3xl"></i>
         <span>LLM Chat Explorer</span>
       </h1>
+      <div class="mb-4">
+        <a href="https://github.com/Prajwalsrinvas/exported_llm_chat_viewer" target="_blank" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+          <i class="fab fa-github text-xl"></i>
+          <span class="text-sm font-medium">View on GitHub</span>
+        </a>
+      </div>
       <p class="text-sm text-gray-600 dark:text-gray-400">
         Upload the export of your chat data from ChatGPT or Claude to view and analyze conversations in an intuitive and
         user-friendly interface.
       </p>
-      <br>
+      <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-4 mb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <i class="fas fa-shield-alt text-green-600 dark:text-green-400"></i>
+          <span class="text-sm font-medium text-green-700 dark:text-green-300">Privacy & Security</span>
+        </div>
+        <p class="text-xs text-green-600 dark:text-green-400">
+          🔒 Your data is processed locally in your browser and never uploaded to any server. For maximum privacy, you can also run this code locally from the GitHub repository.
+        </p>
+      </div>
       <p class="text-base text-gray-800 dark:text-gray-200 mt-2">Drag and drop JSON or ZIP files or click to select</p>
       <input type="file" id="json-file" accept=".json,.zip" multiple class="hidden">
     </div>
