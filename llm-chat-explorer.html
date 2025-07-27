@@ -810,6 +810,10 @@
         <div class="search-options">
           <input type="checkbox" id="search-content-toggle">
           <label for="search-content-toggle">Search within message content</label>
+          <select id="sort-chats" style="float: right;">
+            <option value="newest">Sort by Date (Newest First)</option>
+            <option value="oldest">Sort by Date (Oldest First)</option>
+          </select>
         </div>
         <ul id="chat-list" class="chat-list">
           <!-- Chat titles will be inserted here -->
@@ -1187,7 +1191,32 @@
       // Update the chat counter if defined
       document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
 
+      document.getElementById("sort-chats").addEventListener("change", (event) => {
+        sortConversations(event.target.value, chatData);
+      });
+
       attachChatListClickHandler(chatData);
+    }
+
+    function sortConversations(order, chatData) {
+      const chatList = document.getElementById("chat-list");
+      const items = Array.from(chatList.children);
+
+      items.sort((a, b) => {
+        const chatA = chatData[a.getAttribute("data-id")];
+        const chatB = chatData[b.getAttribute("data-id")];
+
+        const dateA = new Date(chatA.created_time.split('/').reverse().join('-'));
+        const dateB = new Date(chatB.created_time.split('/').reverse().join('-'));
+
+        if (order === 'newest') {
+          return dateB - dateA;
+        } else {
+          return dateA - dateB;
+        }
+      });
+
+      items.forEach(item => chatList.appendChild(item));
     }
 
     function attachChatListClickHandler(chatData) {
