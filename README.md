@@ -1,9 +1,10 @@
 # Chat Compass 🧭
 
-A powerful web application for viewing, searching, and analyzing your exported LLM chat conversations from ChatGPT and Claude.
+An app for viewing, searching, and analyzing your exported LLM chat conversations from ChatGPT and Claude.
 
 **🌐 Live Demo:** [chat-compass.vercel.app](https://chat-compass.vercel.app/)  
-**📦 GitHub:** [github.com/Prajwalsrinvas/exported_llm_chat_viewer](https://github.com/Prajwalsrinvas/exported_llm_chat_viewer)
+
+[recording.webm](https://github.com/user-attachments/assets/d8636e59-854d-4d0d-a669-d730490e9d8d)
 
 ## 🚀 Features
 
@@ -95,13 +96,10 @@ I wanted a better way to view and search through my exported LLM conversations. 
 - Improved conversation threading and display
 - Modern styling and smooth user experience
 
-<!-- Video demo placeholder -->
-## 📹 Demo Video
-*[Demo video will be added here]*
-
-<!-- Cost analysis placeholder -->
 ## 💰 Development Cost
-*[Claude Code cost analysis will be added here]*
+<img width="1622" height="513" alt="image" src="https://github.com/user-attachments/assets/18b5d507-10fe-4548-b7fe-9552b9d52df0" />
+
+using: https://ccusage.com/
 
 ## 🏗️ Built With
 
