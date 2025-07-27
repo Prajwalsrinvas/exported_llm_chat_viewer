@@ -6,32 +6,39 @@
   <title>LLM Chat Explorer</title>
   <meta name="description" content="LLM Chat Explorer is a web application that allows you to view and analyze conversation exports from ChatGPT and Claude, offering an intuitive interface to manage chat history.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root {
-      --primary-color: #10a37f;
-      --primary-light: #e6f7f2;
-      --text-color: #343541;
-      --text-light: #8e8ea0;
-      --sidebar-bg: #f7f7f8;
+      --primary-color: #2563eb;
+      --primary-light: #eff6ff;
+      --primary-dark: #1d4ed8;
+      --text-color: #1f2937;
+      --text-light: #6b7280;
+      --sidebar-bg: #f9fafb;
       --content-bg: #ffffff;
-      --border-color: #e5e5e6;
-      --hover-color: #f0f0f0;
-      --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      --border-color: #e5e7eb;
+      --hover-color: #f3f4f6;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
       --radius: 8px;
-      --highlight-bg: rgba(16, 163, 127, 0.2); /* Highlight color in light mode */
+      --radius-lg: 12px;
+      --highlight-bg: rgba(37, 99, 235, 0.1);
     }
+    
     /* Dark mode override */
     body.dark-mode {
-      --primary-color: #10a37f;
-      --primary-light: #0e8a69;
-      --text-color: #f0f0f0;
-      --text-light: #aaa;
-      --sidebar-bg: #1e1e1e;
-      --content-bg: #121212;
-      --border-color: #333;
-      --hover-color: #2a2a2a;
-      --shadow: none;
-      --highlight-bg: rgba(218, 15, 127, 0.8); /* More intense highlight in dark mode. Was rgba(16, 163, 127, 0.4) */
+      --primary-color: #3b82f6;
+      --primary-light: #1e293b;
+      --primary-dark: #2563eb;
+      --text-color: #f1f5f9;
+      --text-light: #94a3b8;
+      --sidebar-bg: #0f172a;
+      --content-bg: #1e293b;
+      --border-color: #334155;
+      --hover-color: #334155;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+      --highlight-bg: rgba(59, 130, 246, 0.2);
     }
 
     body.dark-mode pre {
@@ -46,11 +53,13 @@
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       color: var(--text-color);
       background-color: var(--content-bg);
       line-height: 1.6;
-      transition: background-color 0.3s, color 0.3s;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      letter-spacing: 0.01em;
     }
     
     /* Upload wrapper to vertically center */
@@ -65,17 +74,21 @@
     /* Upload area: smaller with border and centered */
     #upload-area {
       cursor: pointer;
-      border: 2px dashed #ccc;
-      border-radius: var(--radius);
-      padding: 40px;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 48px 32px;
       text-align: center;
-      max-width: 400px;
+      max-width: 480px;
       width: 100%;
-      transition: background-color 0.3s, border-color 0.3s;
+      transition: all 0.3s ease;
+      background-color: var(--content-bg);
+      box-shadow: var(--shadow);
     }
     #upload-area.hover {
-      background-color: #f0f0f0;
+      background-color: var(--primary-light);
       border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
     }
     /* Upload title with inline icon */
     .upload-title {
@@ -136,12 +149,13 @@
     }
     
     .sidebar {
-      width: 320px;
+      width: 360px;
       background-color: var(--sidebar-bg);
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      transition: width 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow);
     }
     
     .sidebar-header {
@@ -204,20 +218,21 @@
       color: var(--text-light);
     }
     
-    #search-bar {
+    #search-bar, #project-search {
       width: 100%;
-      padding: 10px 40px 10px 40px;
+      padding: 12px 40px 12px 40px;
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       font-size: 14px;
       transition: all 0.2s ease;
       background-color: var(--content-bg);
+      color: var(--text-color);
     }
     
-    #search-bar:focus {
+    #search-bar:focus, #project-search:focus {
       outline: none;
-      border-color: var (--primary-color);
-      box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.2);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--highlight-bg);
     }
     
     .clear-search {
@@ -250,8 +265,8 @@
     }
     
     .chat-list li {
-      padding: 12px 15px;
-      margin-bottom: 5px;
+      padding: 14px 16px;
+      margin-bottom: 6px;
       cursor: pointer;
       border-radius: var(--radius);
       transition: all 0.2s ease;
@@ -259,17 +274,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
       border-left: 3px solid transparent;
+      font-size: 14px;
     }
     
     .chat-list li:hover {
       background-color: var(--hover-color);
       border-left-color: var(--primary-color);
+      transform: translateX(2px);
     }
     
     .chat-list li.active {
       background-color: var(--primary-light);
       border-left-color: var(--primary-color);
-      font-weight: 500;
+      font-weight: 600;
+      box-shadow: var(--shadow);
     }
     
     .chat-date {
@@ -337,21 +355,28 @@
     }
     
     .message {
-      margin-bottom: 20px;
-      padding: 15px;
-      border-radius: var(--radius);
+      margin-bottom: 24px;
+      padding: 20px;
+      border-radius: var(--radius-lg);
       box-shadow: var(--shadow);
       position: relative;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+    
+    .message:hover {
+      box-shadow: var(--shadow-lg);
     }
     
     .message-user {
       background-color: var(--primary-light);
-      margin-left: 50px;
+      margin-left: 60px;
+      border-left: 4px solid var(--primary-color);
     }
     
     .message-assistant {
       background-color: var(--sidebar-bg);
-      margin-right: 50px;
+      margin-right: 60px;
     }
     
     .message-header {
@@ -361,16 +386,18 @@
     }
     
     .avatar {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background-color: var(--primary-color);
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      margin-right: 10px;
+      margin-right: 12px;
       font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .sender {
@@ -525,6 +552,156 @@
       background-color: var(--highlight-bg);
       font-weight: bold;
     }
+
+    /* Thinking content styles */
+    .thinking-section {
+      margin-top: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+      overflow: hidden;
+    }
+
+    body.dark-mode .thinking-section {
+      border-color: #444;
+      background-color: #2a2a2a;
+    }
+
+    .thinking-toggle {
+      padding: 8px 12px;
+      background-color: #f0f0f0;
+      border: none;
+      border-bottom: 1px solid #e0e0e0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      text-align: left;
+    }
+
+    body.dark-mode .thinking-toggle {
+      background-color: #333;
+      border-bottom-color: #444;
+      color: #aaa;
+    }
+
+    .thinking-toggle:hover {
+      background-color: #e8e8e8;
+    }
+
+    body.dark-mode .thinking-toggle:hover {
+      background-color: #3a3a3a;
+    }
+
+    .thinking-content {
+      padding: 12px;
+      font-size: 0.85rem;
+      color: #555;
+      line-height: 1.4;
+      border-top: 1px solid #e0e0e0;
+      display: none;
+    }
+
+    body.dark-mode .thinking-content {
+      color: #ccc;
+      border-top-color: #444;
+    }
+
+    .thinking-content.expanded {
+      display: block;
+    }
+
+    .thinking-icon {
+      transition: transform 0.2s ease;
+    }
+
+    .thinking-icon.expanded {
+      transform: rotate(90deg);
+    }
+
+    /* Tab system styles */
+    .tab-container {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 10px 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-light);
+      transition: all 0.2s ease;
+    }
+
+    .tab-button.active {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .tab-button:hover {
+      background-color: var(--hover-color);
+    }
+
+    .tab-content {
+      display: none;
+      flex-grow: 1;
+      flex-direction: column;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Projects list styles */
+    .project-list {
+      list-style: none;
+      overflow-y: auto;
+      flex-grow: 1;
+      padding: 10px;
+    }
+
+    .project-item {
+      padding: 12px 15px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .project-item:hover {
+      background-color: var(--hover-color);
+      border-left-color: var(--primary-color);
+    }
+
+    .project-item.active {
+      background-color: var(--primary-light);
+      border-left-color: var(--primary-color);
+      font-weight: 500;
+    }
+
+    .project-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .project-description {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      opacity: 0.8;
+    }
+
+    .project-date {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
 </style>
 </head>
 <body>
@@ -541,8 +718,8 @@
         Upload the export of your chat data from ChatGPT or Claude to view and analyze conversations in an intuitive and user-friendly interface.
       </p>
       </br>
-      <p class="upload-instruction">Drag and drop the JSON file or click to select it</p>
-      <input type="file" id="json-file" accept=".json" style="display: none;">
+      <p class="upload-instruction">Drag and drop JSON or ZIP files or click to select</p>
+      <input type="file" id="json-file" accept=".json,.zip" multiple style="display: none;">
     </div>
   </div>
 
@@ -564,18 +741,43 @@
           <i class="fas fa-gear"></i>
         </div>
       </div>
-      <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="search-bar" placeholder="Search conversations...">
-        <span id="clear-search" class="clear-search">&times;</span>
+      
+      <!-- Tab system -->
+      <div class="tab-container">
+        <button class="tab-button active" id="conversations-tab">
+          <i class="fas fa-comments"></i> Conversations
+        </button>
+        <button class="tab-button" id="projects-tab">
+          <i class="fas fa-folder"></i> Projects
+        </button>
       </div>
-      <div class="search-options">
-        <input type="checkbox" id="search-content-toggle">
-        <label for="search-content-toggle">Search within message content</label>
+      
+      <!-- Conversations tab content -->
+      <div id="conversations-content" class="tab-content active">
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="search-bar" placeholder="Search conversations...">
+          <span id="clear-search" class="clear-search">&times;</span>
+        </div>
+        <div class="search-options">
+          <input type="checkbox" id="search-content-toggle">
+          <label for="search-content-toggle">Search within message content</label>
+        </div>
+        <ul id="chat-list" class="chat-list">
+          <!-- Chat titles will be inserted here -->
+        </ul>
       </div>
-      <ul id="chat-list" class="chat-list">
-        <!-- Chat titles will be inserted here -->
-      </ul>
+      
+      <!-- Projects tab content -->
+      <div id="projects-content" class="tab-content">
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="project-search" placeholder="Search projects...">
+        </div>
+        <ul id="project-list" class="project-list">
+          <!-- Projects will be inserted here -->
+        </ul>
+      </div>
     </div>
     <div class="content">
       <div class="content-header">
@@ -618,367 +820,10 @@
       </label>
       <span id="chat-position-text">At end</span>
       </div>
-      <div class="setting-item">
-      <span class="label" id="language-label">Language:</span>
-      <select id="language-select">
-        <option value="en">English</option>
-        <option value="it">Italiano</option>
-        <option value="es">Español</option>
-        <option value="fr">Français</option>
-        <option value="de">Deutsch</option>
-        <option value="pl">Polski</option>
-        <option value="zh">中文</option>
-        <option value="ko">한국어</option>
-        <option value="ja">日本語</option>      
-      </select>
-      </div>
     </div>
     </div>
 
   <script>
-    /* Translations for various languages */
-    const translations = {
-      it: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Clicca qui per ricaricare la pagina",
-        uploadInstruction: "Trascina qui il file JSON (conversations.json) oppure clicca per selezionarlo",
-        metaDescription: "LLM Chat Explorer è un'applicazione web che consente di visualizzare e analizzare le esportazioni delle conversazioni da ChatGPT e Claude, offrendo un'interfaccia intuitiva per gestire la cronologia chat.",
-        uploadDescription: "Carica l'esportazione dei tuoi dati di chat da ChatGPT o Claude per visualizzare e analizzare le conversazioni in un'interfaccia intuitiva e user-friendly.",
-        sourceLabel: "Fonte:",
-        openSettingsTooltip: "Apri impostazioni",
-        searchPlaceholder: "Cerca conversazioni...",
-        selectChat: "Seleziona una chat",
-        emptyState: "Seleziona una conversazione dalla lista per visualizzarla",
-        noMessage: "Nessun messaggio disponibile per questa chat",
-        viewOnChatGPT: "Visualizza su ChatGPT",
-        viewOnClaude: "Visualizza su Claude",
-        settingsTitle: "Impostazioni",
-        darkModeLabel: "Modalità dark:",
-        chatPositionLabel: "Posizione chat:",
-        languageLabel: "Lingua:",
-        chatPositionEnd: "Alla fine",
-        chatPositionStart: "All'inizio",
-        chatCountSuffix: "chat totali",
-        searchContentLabel: "Ricerca nel contenuto dei messaggi",
-        shareButtonTitle: "Condividi chat",
-        copyNotification: "Link della chat copiato negli appunti!",
-        jsonParseError: "Errore nel parsing del file JSON: ",
-        fileReadError: "Errore nella lettura del file",
-        copyError: "Errore nel copiare le informazioni",
-        userSender: "Tu",
-        visibleSeparator: "di"
-      },
-      en: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Click here to reload the page",
-        uploadInstruction: "Drag and drop the JSON file (conversations.json) or click to select it",
-        metaDescription: "LLM Chat Explorer is a web application that allows you to view and analyze conversation exports from ChatGPT and Claude, offering an intuitive interface to manage chat history.",
-        uploadDescription: "Upload the export of your chat data from ChatGPT or Claude to view and analyze conversations in an intuitive and user-friendly interface.",
-        sourceLabel: "Source:",
-        openSettingsTooltip: "Open settings",
-        searchPlaceholder: "Search conversations...",
-        selectChat: "Select a chat",
-        emptyState: "Select a conversation from the list to view it",
-        noMessage: "No messages available for this chat",
-        viewOnChatGPT: "View on ChatGPT",
-        viewOnClaude: "View su Claude",
-        settingsTitle: "Settings",
-        darkModeLabel: "Dark mode:",
-        chatPositionLabel: "Chat position:",
-        languageLabel: "Language:",
-        chatPositionEnd: "At end",
-        chatPositionStart: "At start",
-        chatCountSuffix: "chats total",
-        searchContentLabel: "Search within message content",
-        shareButtonTitle: "Share chat",
-        copyNotification: "Chat link copied to clipboard!",
-        jsonParseError: "JSON file parsing error: ",
-        fileReadError: "File reading error",
-        copyError: "Error copying information",
-        userSender: "You",
-        visibleSeparator: "of"
-      },
-      es: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Haz clic aquí para recargar la página",
-        uploadInstruction: "Arrastra el archivo JSON (conversations.json) o haz clic para seleccionarlo",
-        metaDescription: "LLM Chat Explorer es una aplicación web que te permite visualizar y analizar las exportaciones de conversaciones de ChatGPT y Claude, ofreciendo una interfaz intuitiva para gestionar el historial de chats.",
-        uploadDescription: "Carga la exportación de tus datos de chat de ChatGPT o Claude para visualizar y analizar las conversaciones en una interfaz intuitiva y fácil de usar.",
-        sourceLabel: "Fuente:",
-        openSettingsTooltip: "Abrir ajustes",
-        searchPlaceholder: "Buscar conversaciones...",
-        selectChat: "Selecciona un chat",
-        emptyState: "Selecciona una conversación de la lista para visualizarla",
-        noMessage: "No hay mensajes disponibles para este chat",
-        viewOnChatGPT: "Ver en ChatGPT",
-        viewOnClaude: "Ver en Claude",
-        settingsTitle: "Configuraciones",
-        darkModeLabel: "Modo oscuro:",
-        chatPositionLabel: "Posición del chat:",
-        languageLabel: "Idioma:",
-        chatPositionEnd: "Al final",
-        chatPositionStart: "Al principio",
-        chatCountSuffix: "chats totales",
-        searchContentLabel: "Buscar en el contenido de los mensajes",
-        shareButtonTitle: "Compartir chat",
-        copyNotification: "¡Enlace del chat copiado al portapapeles!",
-        jsonParseError: "Error al analizar el archivo JSON: ",
-        fileReadError: "Error al leer el archivo",
-        copyError: "Error al copiar la información",
-        userSender: "Tú",
-        visibleSeparator: "de"
-      },
-      fr: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Cliquez ici pour recharger la page",
-        uploadInstruction: "Faites glisser le fichier JSON (conversations.json) ou cliquez pour le sélectionner",
-        metaDescription: "LLM Chat Explorer est une application web qui vous permet de visualiser et d'analyser les exportations de conversations de ChatGPT et Claude, offrant une interface intuitive pour gérer l'historique des chats.",
-        uploadDescription: "Téléchargez l'exportation de vos données de chat de ChatGPT ou Claude pour visualiser et analyser les conversations dans une interface intuitive et conviviale.",
-        sourceLabel: "Source:",
-        openSettingsTooltip: "Ouvrir les paramètres",
-        searchPlaceholder: "Rechercher des conversations...",
-        selectChat: "Sélectionnez une conversation",
-        emptyState: "Sélectionnez une conversation dans la liste pour l'afficher",
-        noMessage: "Aucun message disponible pour cette conversation",
-        viewOnChatGPT: "Voir sur ChatGPT",
-        viewOnClaude: "Voir sur Claude",
-        settingsTitle: "Paramètres",
-        darkModeLabel: "Mode sombre:",
-        chatPositionLabel: "Position du chat:",
-        languageLabel: "Langue:",
-        chatPositionEnd: "À la fin",
-        chatPositionStart: "Au début",
-        chatCountSuffix: "chats totaux",
-        searchContentLabel: "Rechercher dans le contenu des messages",
-        shareButtonTitle: "Partager le chat",
-        copyNotification: "Lien du chat copié dans le presse-papiers !",
-        jsonParseError: "Erreur lors de l'analyse du fichier JSON : ",
-        fileReadError: "Erreur lors de la lecture du fichier",
-        copyError: "Erreur lors de la copie des informations",
-        userSender: "Vous",
-        visibleSeparator: "de"
-      },
-      de: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Klicken Sie hier, um die Seite neu zu laden",
-        uploadInstruction: "Ziehen Sie die JSON-Datei (conversations.json) per Drag & Drop oder klicken Sie, um sie auszuwählen",
-        metaDescription: "LLM Chat Explorer ist eine Webanwendung, die es Ihnen ermöglicht, Gesprächsexporte von ChatGPT und Claude anzusehen und zu analysieren, und bietet eine intuitive Benutzeroberfläche zur Verwaltung des Chatverlaufs.",
-        uploadDescription: "Laden Sie den Export Ihrer Chat-Daten von ChatGPT oder Claude hoch, um die Gespräche in einer intuitiven und benutzerfreundlichen Oberfläche anzuzeigen und zu analysieren.",
-        sourceLabel: "Quelle:",
-        openSettingsTooltip: "Einstellungen öffnen",
-        searchPlaceholder: "Suche Unterhaltungen...",
-        selectChat: "Wähle einen Chat",
-        emptyState: "Wählen Sie einen Chat aus der Liste, um ihn anzuzeigen",
-        noMessage: "Keine Nachrichten für diesen Chat verfügbar",
-        viewOnChatGPT: "Auf ChatGPT anzeigen",
-        viewOnClaude: "Auf Claude anzeigen",
-        settingsTitle: "Einstellungen",
-        darkModeLabel: "Dunkelmodus:",
-        chatPositionLabel: "Chatposition:",
-        languageLabel: "Sprache:",
-        chatPositionEnd: "Am Ende",
-        chatPositionStart: "Am Anfang",
-        chatCountSuffix: "Chats insgesamt",
-        searchContentLabel: "Im Nachrichteninhalt suchen",
-        shareButtonTitle: "Chat teilen",
-        copyNotification: "Chat-Link in die Zwischenablage kopiert!",
-        jsonParseError: "Fehler beim Parsen der JSON-Datei: ",
-        fileReadError: "Fehler beim Lesen der Datei",
-        copyError: "Fehler beim Kopieren der Informationen",
-        userSender: "Du",
-        visibleSeparator: "von"
-      },
-      pl: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "Kliknij tutaj, aby przeładować stronę",
-        uploadInstruction: "Przeciągnij plik JSON (conversations.json) tutaj lub kliknij, aby go wybrać",
-        metaDescription: "LLM Chat Explorer to aplikacja internetowa, która umożliwia przeglądanie i analizowanie eksportów konwersacji z ChatGPT i Claude, oferując intuicyjny interfejs do zarządzania historią czatu.",
-        uploadDescription: "Prześlij eksport swoich danych czatu z ChatGPT lub Claude, aby przeglądać i analizować konwersacje w intuicyjnym i przyjaznym dla użytkownika interfejsie.",
-        sourceLabel: "Źródło:",
-        openSettingsTooltip: "Otwórz ustawienia",
-        searchPlaceholder: "Szukaj konwersacji...",
-        selectChat: "Wybierz czat",
-        emptyState: "Wybierz konwersację z listy, aby ją wyświetlić",
-        noMessage: "Brak wiadomości dostępnych dla tego czatu",
-        viewOnChatGPT: "Wyświetl na ChatGPT",
-        viewOnClaude: "Wyświetl na Claude",
-        settingsTitle: "Ustawienia",
-        darkModeLabel: "Tryb ciemny:",
-        chatPositionLabel: "Pozycja czatu:",
-        languageLabel: "Język:",
-        chatPositionEnd: "Na końcu",
-        chatPositionStart: "Na początku",
-        chatCountSuffix: "czatów łącznie",
-        searchContentLabel: "Szukaj w treści wiadomości",
-        shareButtonTitle: "Udostępnij czat",
-        copyNotification: "Link do czatu skopiowany do schowka!",
-        jsonParseError: "Błąd podczas analizowania pliku JSON: ",
-        fileReadError: "Błąd podczas odczytu pliku",
-        copyError: "Błąd podczas kopiowania informacji",
-        userSender: "Ty",
-        visibleSeparator: "z"
-      },
-      zh: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "点击此处重新加载页面",
-        uploadInstruction: "将 JSON 文件 (conversations.json) 拖放到此处或单击以选择",
-        metaDescription: "LLM Chat Explorer 是一个网页应用程序，可让您查看和分析来自 ChatGPT 和 Claude 的对话导出，并提供直观的界面来管理聊天历史。",
-        uploadDescription: "上传您的 ChatGPT 或 Claude 聊天数据导出文件，以直观、用户友好的界面查看和分析对话。",
-        sourceLabel: "来源:",
-        openSettingsTooltip: "打开设置",
-        searchPlaceholder: "搜索对话...",
-        selectChat: "选择一个聊天",
-        emptyState: "从列表中选择对话以查看",
-        noMessage: "该聊天没有可用消息",
-        viewOnChatGPT: "在 ChatGPT 上查看",
-        viewOnClaude: "在 Claude 上查看",
-        settingsTitle: "设置",
-        darkModeLabel: "暗黑模式:",
-        chatPositionLabel: "聊天位置:",
-        languageLabel: "语言:",
-        chatPositionEnd: "在末尾",
-        chatPositionStart: "在开头",
-        chatCountSuffix: "总聊天数",
-        searchContentLabel: "搜索消息内容",
-        shareButtonTitle: "分享聊天",
-        copyNotification: "聊天链接已复制到剪贴板！",
-        jsonParseError: "JSON 文件解析错误: ",
-        fileReadError: "文件读取错误",
-        copyError: "复制信息时出错",
-        userSender: "你",
-        visibleSeparator: "的"
-      },
-      ko: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "페이지를 새로고침하려면 여기를 클릭하세요",
-        uploadInstruction: "JSON 파일 (conversations.json)을 여기에 드래그 앤 드롭하거나 클릭하여 선택하세요",
-        metaDescription: "LLM Chat Explorer는 ChatGPT와 Claude의 대화 내보내기를 확인하고 분석할 수 있는 웹 애플리케이션으로, 채팅 기록을 관리하기 위한 직관적인 인터페이스를 제공합니다.",
-        uploadDescription: "ChatGPT 또는 Claude의 채팅 데이터 내보내기를 업로드하여 직관적이고 사용자 친화적인 인터페이스에서 대화를 확인하고 분석하세요.",
-        sourceLabel: "출처:",
-        openSettingsTooltip: "설정 열기",
-        searchPlaceholder: "대화를 검색하세요...",
-        selectChat: "채팅 선택",
-        emptyState: "목록에서 대화를 선택하여 표시하세요",
-        noMessage: "이 채팅에 사용 가능한 메시지가 없습니다",
-        viewOnChatGPT: "ChatGPT에서 보기",
-        viewOnClaude: "Claude에서 보기",
-        settingsTitle: "설정",
-        darkModeLabel: "다크 모드:",
-        chatPositionLabel: "채팅 위치:",
-        languageLabel: "언어:",
-        chatPositionEnd: "끝에",
-        chatPositionStart: "처음에",
-        chatCountSuffix: "총 채팅 수",
-        searchContentLabel: "메시지 내용 검색",
-        shareButtonTitle: "채팅 공유",
-        copyNotification: "채팅 링크가 클립보드에 복사되었습니다!",
-        jsonParseError: "JSON 파일 구문 분석 오류: ",
-        fileReadError: "파일 읽기 오류",
-        copyError: "정보 복사 오류",
-        userSender: "너",
-        visibleSeparator: "의"
-      },
-      ja: {
-        uploadTitle: "LLM Chat Explorer",
-        reloadTooltip: "ページを再読み込みするにはここをクリックしてください",
-        uploadInstruction: "JSONファイル (conversations.json) をここにドラッグ＆ドロップするか、クリックして選択してください",
-        metaDescription: "LLM Chat Explorer は、ChatGPT と Claude からの会話のエクスポートを表示および解析できるウェブアプリケーションで、チャット履歴を管理するための直感的なインターフェースを提供します。",
-        uploadDescription: "ChatGPT または Claude のチャットデータのエクスポートをアップロードして、直感的で使いやすいインターフェースで会話を表示および解析してください。",
-        sourceLabel: "出典:",
-        openSettingsTooltip: "設定を開く",
-        searchPlaceholder: "会話を検索...",
-        selectChat: "チャットを選択",
-        emptyState: "リストから会話を選択して表示",
-        noMessage: "このチャットには利用可能なメッセージがありません",
-        viewOnChatGPT: "ChatGPTで表示",
-        viewOnClaude: "Claudeで表示",
-        settingsTitle: "設定",
-        darkModeLabel: "ダークモード:",
-        chatPositionLabel: "チャット位置:",
-        languageLabel: "言語:",
-        chatPositionEnd: "最後に",
-        chatPositionStart: "最初に",
-        chatCountSuffix: "合計チャット数",
-        searchContentLabel: "メッセージ内容を検索",
-        shareButtonTitle: "チャットを共有",
-        copyNotification: "チャットリンクがクリップボードにコピーされました！",
-        jsonParseError: "JSONファイルの解析エラー: ",
-        fileReadError: "ファイル読み取りエラー",
-        copyError: "情報のコピーエラー",
-        userSender: "あなた",
-        visibleSeparator: "の"
-      }
-    };
-    // Update texts based on the selected language
-    function updateTranslations() {
-      const lang = localStorage.getItem('language') || 'en';
-      // Update the meta tag description
-      document.querySelector("meta[name='description']").setAttribute("content", translations[lang].metaDescription);
-      // Update the tooltip of the clickable title in the sidebar-header
-      document.querySelector(".sidebar-header h1").setAttribute("title", translations[lang].reloadTooltip);
-      // Update the tooltip of the settings icon
-      document.getElementById("open-settings").setAttribute("title", translations[lang].openSettingsTooltip);
-      // Upload area
-      document.querySelector("#upload-area .upload-title span").textContent = translations[lang].uploadTitle;
-      document.querySelector("#upload-area p.small-text").textContent = translations[lang].uploadDescription;
-      document.querySelector("#upload-area p.upload-instruction").textContent = translations[lang].uploadInstruction;
-      // Search placeholder
-      document.getElementById("search-bar").placeholder = translations[lang].searchPlaceholder;
-      // Content header: if nothing has been selected yet, show the default text
-      if(document.getElementById("chat-title").textContent.trim() === "Select a chat" ||
-       document.getElementById("chat-title").textContent.trim() === "Seleziona una chat" ||
-       document.getElementById("chat-title").textContent.trim() === "Selecciona un chat" ||
-       document.getElementById("chat-title").textContent.trim() === "Sélectionnez une conversation" ||
-       document.getElementById("chat-title").textContent.trim() === "Wähle einen Chat" ||
-       document.getElementById("chat-title").textContent.trim() === "Wybierz czat" ||
-       document.getElementById("chat-title").textContent.trim() === "选择一个聊天" ||
-       document.getElementById("chat-title").textContent.trim() === "채팅 선택" ||
-       document.getElementById("chat-title").textContent.trim() === "チャットを選択") {
-      document.getElementById("chat-title").textContent = translations[lang].selectChat;
-      }
-      // External link text
-      document.querySelector("#chat-link").innerHTML = '<i class="fas fa-external-link-alt"></i> ' + translations[lang].viewOnChatGPT;
-      // Empty state
-      let emptyStateP = document.querySelector(".empty-state p");
-      if(emptyStateP) {
-      emptyStateP.textContent = translations[lang].emptyState;
-      }
-      // Update the service label if it exists and the service has already been determined
-      if (document.getElementById("service-label") && window.currentService) {
-      document.getElementById("service-label").textContent = translations[lang].sourceLabel + " " + window.currentService;
-      }
-      // Settings modal
-      document.querySelector("#settings-modal h2").textContent = translations[lang].settingsTitle;
-      document.getElementById("dark-mode-label").textContent = translations[lang].darkModeLabel;
-      document.getElementById("chat-position-label").textContent = translations[lang].chatPositionLabel;
-      document.getElementById("language-label").textContent = translations[lang].languageLabel;
-      // Update the chat position text in the modal based on the toggle state
-      const chatPosToggle = document.getElementById("modal-chat-toggle");
-      if(chatPosToggle.checked) {
-      document.getElementById("chat-position-text").textContent = translations[lang].chatPositionEnd;
-      } else {
-      document.getElementById("chat-position-text").textContent = translations[lang].chatPositionStart;
-      }
-      document.querySelector(".search-options label[for='search-content-toggle']").textContent = translations[lang].searchContentLabel;
-      document.getElementById("share-button").title = translations[lang].shareButtonTitle;
-
-      // Update the counter based on the search field content
-      const searchBar = document.getElementById("search-bar");
-      const currentSearch = searchBar.value.toLowerCase().trim();
-      if (currentSearch !== "") {
-      // If there is an active filter, count the visible chats
-      let visibleCount = 0;
-      Array.from(document.getElementById("chat-list").children).forEach(li => {
-        if (li.style.display !== "none") {
-        visibleCount++;
-        }
-      });
-      document.getElementById("chat-counter-text").textContent =
-        visibleCount + " " + translations[lang].visibleSeparator + " " + window.totalChats + " " + translations[lang].chatCountSuffix;
-      } else {
-      document.getElementById("chat-counter-text").textContent = window.totalChats + " " + translations[lang].chatCountSuffix;
-      }
-    }
 
     // Function to format the date in dd/mm/yyyy format
     function formatDate(date) {
@@ -990,7 +835,6 @@
     }
 
     function processData(data) {
-      const lang = localStorage.getItem('language') || 'en';
       let conversations = [];
       if (Array.isArray(data)) {
       conversations = data;
@@ -1030,15 +874,15 @@
         } else {
           role = "assistant"; // default
         }
-        if (msg.text && msg.text.trim() !== '') {
-          messages.push({ text: msg.text, role: role });
-        } else if (msg.content) {
-          msg.content.forEach((part) => {
-          if (part.text && part.text.trim() !== '') {
-            messages.push({ text: part.text, role: role });
-          }
-          });
-        }
+        
+        // For Claude messages, store the full message object for thinking content
+        const messageObj = {
+          text: msg.text || '',
+          role: role,
+          content: msg.content || [],
+          isClaudeMessage: true
+        };
+        messages.push(messageObj);
         });
       }
       // If the format is ChatGPT with mapping
@@ -1092,7 +936,7 @@
       // If the first object contains "chat_messages", the file is from Claude, otherwise ChatGPT
       let serviceType = (conversations[0].chat_messages) ? "Claude" : "ChatGPT";
       window.currentService = serviceType; // Save the service globally
-      document.getElementById("service-label").textContent = translations[lang].sourceLabel + " " + serviceType;
+      document.getElementById("service-label").textContent = "Source: " + serviceType;
       }
       const searchBar = document.getElementById("search-bar");
       const clearSearch = document.getElementById("clear-search");
@@ -1135,11 +979,10 @@
       });
       
       // Update the counter: "visible of total chats total"
-      const lang = localStorage.getItem('language') || 'en';
       if (visibleCount === window.totalChats) {
-        document.getElementById("chat-counter-text").textContent = window.totalChats + " " + translations[lang].chatCountSuffix;
+        document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
       } else {
-        document.getElementById("chat-counter-text").textContent = visibleCount + " " + translations[lang].visibleSeparator + " " + window.totalChats + " " + translations[lang].chatCountSuffix;
+        document.getElementById("chat-counter-text").textContent = visibleCount + " of " + window.totalChats + " chats total";
       }
       
       // If a chat is active, also update the message content
@@ -1163,8 +1006,7 @@
       });
       searchBar.focus();
       // Update the counter to show the total, as the filter has been removed
-      const lang = localStorage.getItem('language') || 'en';
-      document.getElementById("chat-counter-text").textContent = window.totalChats + " " + translations[lang].chatCountSuffix;
+      document.getElementById("chat-counter-text").textContent = window.totalChats + " chats total";
       });
       document.getElementById("chat-list").addEventListener("click", (event) => {
       const clickedLi = event.target.closest("li");
@@ -1189,21 +1031,20 @@
         document.getElementById("chat-content").innerHTML = `
         <div class="empty-state">
           <i class="fas fa-comment-slash"></i>
-          <p>${translations[localStorage.getItem('language') || 'en'].emptyState}</p>
+          <p>Select a conversation from the list to view it</p>
         </div>`;
       }
       });
       function renderMessages(messages) {
-      const lang = localStorage.getItem('language') || 'en';
       let html = '';
-      messages.forEach((msgObj) => {
+      messages.forEach((msgObj, msgIndex) => {
         const role = msgObj.role || "assistant"; // fallback
         if (role === "user") {
         html += `
           <div class="message message-user">
           <div class="message-header">
             <div class="avatar" title="User">U</div>
-            <span class="sender">${translations[lang].userSender}</span>
+            <span class="sender">You</span>
           </div>
           <div class="message-content">${formatMessage(msgObj.text)}</div>
           </div>`;
@@ -1214,14 +1055,54 @@
             <div class="avatar" title="Assistant" style="background-color: var(--primary-color)">A</div>
             <span class="sender">${window.currentService}</span>
           </div>
-          <div class="message-content">${formatMessage(msgObj.text)}</div>
+          <div class="message-content">
+            ${formatMessage(msgObj.text)}
+            ${renderThinkingContent(msgObj, msgIndex)}
+          </div>
           </div>`;
         }
       });
       document.getElementById("chat-content").innerHTML = html;
+      
+      // Add click handlers for thinking toggles
+      document.querySelectorAll('.thinking-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          const content = toggle.nextElementSibling;
+          const icon = toggle.querySelector('.thinking-icon');
+          
+          if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            icon.classList.remove('expanded');
+          } else {
+            content.classList.add('expanded');
+            icon.classList.add('expanded');
+          }
+        });
+      });
+      
       const scrollPreference = localStorage.getItem('chatPosition') || 'end';
       const chatContent = document.getElementById("chat-content");
       chatContent.scrollTop = scrollPreference === 'end' ? chatContent.scrollHeight : 0;
+      }
+
+      function renderThinkingContent(msgObj, msgIndex) {
+        if (!msgObj.isClaudeMessage || !msgObj.content) return '';
+        
+        // Find thinking content
+        const thinkingContent = msgObj.content.find(c => c.type === 'thinking');
+        if (!thinkingContent) return '';
+        
+        return `
+          <div class="thinking-section">
+            <button class="thinking-toggle">
+              <i class="fas fa-chevron-right thinking-icon"></i>
+              💭 Show Thinking
+            </button>
+            <div class="thinking-content">
+              ${formatMessage(thinkingContent.thinking || '')}
+            </div>
+          </div>
+        `;
       }
       function formatMessage(text) {
       if (!text) return '';
@@ -1244,7 +1125,7 @@
       }
     
       // Update the chat counter if defined
-      document.getElementById("chat-counter-text").textContent = conversations.length + " " + translations[lang].chatCountSuffix;
+      document.getElementById("chat-counter-text").textContent = conversations.length + " chats total";
 
       attachChatListClickHandler(chatData);
     }
@@ -1260,18 +1141,17 @@
       const chatId = clickedLi.getAttribute("data-id");
       const chat = chatData[chatId];
       document.getElementById("chat-title").textContent = chat.title;
-      const lang = localStorage.getItem('language') || 'en';
       const chatLink = document.getElementById("chat-link");
 
       // Only show the link if there are messages
       if (chat.messages && chat.messages.length > 0) {
         if (chat.service === "Claude" && chat.uuid) {
         chatLink.href = "https://claude.ai/chat/" + chat.uuid;
-        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> ' + (translations[lang].viewOnClaude);
+        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on Claude';
         chatLink.style.display = "inline-flex";
         } else if (chat.service === "ChatGPT" && chat.conversation_id) {
         chatLink.href = "https://chat.openai.com/c/" + chat.conversation_id;
-        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> ' + translations[lang].viewOnChatGPT;
+        chatLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View on ChatGPT';
         chatLink.style.display = "inline-flex";
         } else {
         chatLink.style.display = "none";
@@ -1286,48 +1166,207 @@
         document.getElementById("chat-content").innerHTML = `
         <div class="empty-state">
           <i class="fas fa-comment-slash"></i>
-          <p>${translations[lang].emptyState}</p>
+          <p>Select a conversation from the list to view it</p>
         </div>`;
       }
       });
     }
 
-    // Handle the uploaded file (via input or drag & drop)
-    function handleFile(file) {
+    // Process ZIP file and extract JSON files
+    async function processZipFile(file) {
+      try {
+        const zip = new JSZip();
+        const zipContents = await zip.loadAsync(file);
+        
+        let conversations = [];
+        let projects = [];
+        
+        // Look for conversations.json and projects.json files
+        for (const filename in zipContents.files) {
+          const zipFile = zipContents.files[filename];
+          
+          if (filename.endsWith('conversations.json') && !zipFile.dir) {
+            const content = await zipFile.async('text');
+            const data = JSON.parse(content);
+            if (Array.isArray(data)) {
+              conversations = conversations.concat(data);
+            } else {
+              conversations.push(data);
+            }
+          } else if (filename.endsWith('projects.json') && !zipFile.dir) {
+            const content = await zipFile.async('text');
+            const data = JSON.parse(content);
+            if (Array.isArray(data)) {
+              projects = projects.concat(data);
+            } else {
+              projects.push(data);
+            }
+          }
+        }
+        
+        return { conversations, projects };
+      } catch (e) {
+        throw new Error("Error processing ZIP file: " + e.message);
+      }
+    }
+
+    // Handle the uploaded files (via input or drag & drop)
+    async function handleFiles(files) {
       const loadingOverlay = document.getElementById('loading-overlay');
       const loadingBar = document.getElementById('loading-bar');
       loadingOverlay.style.display = 'block';
-      const reader = new FileReader();
-      reader.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentLoaded = event.loaded / event.total;
-        loadingBar.style.width = Math.floor(percentLoaded * 100) + '%';
-      }
-      };
-      reader.onload = (event) => {
+      
       try {
-        const data = JSON.parse(event.target.result);
+        let allConversations = [];
+        let allProjects = [];
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          loadingBar.style.width = Math.floor((i / files.length) * 100) + '%';
+          
+          if (file.name.endsWith('.zip')) {
+            const { conversations, projects } = await processZipFile(file);
+            allConversations = allConversations.concat(conversations);
+            allProjects = allProjects.concat(projects);
+          } else if (file.name.endsWith('.json')) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            // Detect format and add to appropriate array
+            if (Array.isArray(data)) {
+              allConversations = allConversations.concat(data);
+            } else if (data.chat_messages) {
+              // Single Claude conversation
+              allConversations.push(data);
+            } else if (data.conversations) {
+              // ChatGPT format
+              allConversations = allConversations.concat(data.conversations);
+            } else {
+              // Assume single conversation
+              allConversations.push(data);
+            }
+          }
+        }
+        
+        // Store projects globally for later use
+        window.allProjects = allProjects;
+        
         document.getElementById('upload-wrapper').style.display = 'none';
         document.querySelector('.app-container').style.display = 'flex';
         loadingOverlay.style.display = 'none';
-        processData(data);
+        
+        processData(allConversations);
+        renderProjects();
+        
       } catch (e) {
-        const lang = localStorage.getItem('language') || 'en';
-        alert(translations[lang].jsonParseError + e);
+        alert("File processing error: " + e.message);
         loadingOverlay.style.display = 'none';
       }
-      };
-      reader.onerror = () => {
-      const lang = localStorage.getItem('language') || 'en';
-      alert(translations[lang].fileReadError);
-      loadingOverlay.style.display = 'none';
-      };
-      reader.readAsText(file);
+    }
+
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Remove active class from all tabs and content
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding content
+      document.getElementById(tabName + '-tab').classList.add('active');
+      document.getElementById(tabName + '-content').classList.add('active');
+    }
+
+    // Render projects list
+    function renderProjects() {
+      const projectList = document.getElementById('project-list');
+      if (!window.allProjects || window.allProjects.length === 0) {
+        projectList.innerHTML = '<li style="padding: 20px; text-align: center; color: var(--text-light);">No projects found</li>';
+        return;
+      }
+      
+      let html = '';
+      window.allProjects.forEach((project, index) => {
+        const name = project.name || `Project ${index + 1}`;
+        const description = project.description || '';
+        const createdDate = project.created_at ? formatDate(new Date(project.created_at)) : '';
+        
+        html += `
+          <li class="project-item" data-project-id="${index}">
+            <div class="project-name">${name}</div>
+            ${description ? `<div class="project-description">${description}</div>` : ''}
+            ${createdDate ? `<div class="project-date">${createdDate}</div>` : ''}
+          </li>
+        `;
+      });
+      
+      projectList.innerHTML = html;
+      
+      // Add click handlers for projects
+      projectList.addEventListener('click', (e) => {
+        const projectItem = e.target.closest('.project-item');
+        if (!projectItem) return;
+        
+        // Remove active class from other projects
+        document.querySelectorAll('.project-item').forEach(item => item.classList.remove('active'));
+        projectItem.classList.add('active');
+        
+        const projectId = projectItem.getAttribute('data-project-id');
+        displayProject(window.allProjects[projectId]);
+      });
+    }
+
+    // Display project details in the main content area
+    function displayProject(project) {
+      const chatTitle = document.getElementById('chat-title');
+      const chatContent = document.getElementById('chat-content');
+      const chatLink = document.getElementById('chat-link');
+      
+      chatTitle.textContent = project.name || 'Project';
+      chatLink.style.display = 'none';
+      
+      let html = `
+        <div style="padding: 20px;">
+          <h3>Project: ${project.name || 'Unnamed Project'}</h3>
+          ${project.description ? `<p style="margin: 10px 0; color: var(--text-light);">${project.description}</p>` : ''}
+          ${project.created_at ? `<p style="margin: 10px 0; font-size: 0.9rem; color: var(--text-light);">Created: ${formatDate(new Date(project.created_at))}</p>` : ''}
+          
+          ${project.prompt_template ? `
+            <div style="margin: 20px 0;">
+              <h4>Prompt Template:</h4>
+              <div style="background: var(--sidebar-bg); padding: 15px; border-radius: 5px; margin: 10px 0; white-space: pre-wrap; font-family: monospace;">${project.prompt_template}</div>
+            </div>
+          ` : ''}
+          
+          ${project.docs && project.docs.length > 0 ? `
+            <div style="margin: 20px 0;">
+              <h4>Documents (${project.docs.length}):</h4>
+              ${project.docs.map(doc => `
+                <div style="border: 1px solid var(--border-color); border-radius: 5px; margin: 10px 0; padding: 15px;">
+                  <h5 style="margin: 0 0 10px 0;">${doc.filename || 'Unnamed Document'}</h5>
+                  ${doc.created_at ? `<p style="font-size: 0.8rem; color: var(--text-light); margin: 5px 0;">Created: ${formatDate(new Date(doc.created_at))}</p>` : ''}
+                  ${doc.content ? `
+                    <details style="margin: 10px 0;">
+                      <summary style="cursor: pointer; font-weight: 500;">View Content</summary>
+                      <div style="margin-top: 10px; padding: 10px; background: var(--sidebar-bg); border-radius: 3px; white-space: pre-wrap; font-size: 0.9rem; max-height: 300px; overflow-y: auto;">${doc.content}</div>
+                    </details>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      chatContent.innerHTML = html;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
       const uploadArea = document.getElementById('upload-area');
       const jsonFileInput = document.getElementById('json-file');
+      
+      // Tab switching
+      document.getElementById('conversations-tab').addEventListener('click', () => switchTab('conversations'));
+      document.getElementById('projects-tab').addEventListener('click', () => switchTab('projects'));
+      
       uploadArea.addEventListener("click", () => {
       jsonFileInput.click();
       });
@@ -1344,12 +1383,12 @@
       uploadArea.classList.remove('hover');
       const files = e.dataTransfer.files;
       if (files.length) {
-        handleFile(files[0]);
+        handleFiles(Array.from(files));
       }
       });
       jsonFileInput.addEventListener("change", (e) => {
       if (e.target.files.length) {
-        handleFile(e.target.files[0]);
+        handleFiles(Array.from(e.target.files));
       }
       });
       // Modal: close by clicking the X
@@ -1369,7 +1408,6 @@
         document.body.classList.remove('dark-mode');
         localStorage.setItem('darkMode', 'false');
       }
-      updateTranslations();
       });
       // Toggle chat position in modal
       document.getElementById("modal-chat-toggle").addEventListener("change", (e) => {
@@ -1378,16 +1416,10 @@
       } else {
         localStorage.setItem('chatPosition', 'start');
       }
-      const lang = localStorage.getItem('language') || 'en';
-      document.getElementById("chat-position-text").textContent = e.target.checked ? translations[lang].chatPositionEnd : translations[lang].chatPositionStart;
+      document.getElementById("chat-position-text").textContent = e.target.checked ? "At end" : "At start";
       // If a chat is already displayed, update the scroll
       const chatContent = document.getElementById("chat-content");
       chatContent.scrollTop = e.target.checked ? chatContent.scrollHeight : 0;
-      });
-      // Handle language change
-      document.getElementById("language-select").addEventListener("change", (e) => {
-      localStorage.setItem('language', e.target.value);
-      updateTranslations();
       });
       // Set saved settings from localStorage
       if (localStorage.getItem('darkMode') === 'true') {
@@ -1396,17 +1428,11 @@
       }
       if (localStorage.getItem('chatPosition') === 'end') {
       document.getElementById("modal-chat-toggle").checked = true;
-      document.getElementById("chat-position-text").textContent = translations[localStorage.getItem('language') || 'it'].chatPositionEnd;
+      document.getElementById("chat-position-text").textContent = "At end";
       } else {
       document.getElementById("modal-chat-toggle").checked = false;
-      document.getElementById("chat-position-text").textContent = translations[localStorage.getItem('language') || 'it'].chatPositionStart;
+      document.getElementById("chat-position-text").textContent = "At start";
       }
-      if (localStorage.getItem('language')) {
-      document.getElementById("language-select").value = localStorage.getItem('language');
-      } else {
-      localStorage.setItem('language', 'en');
-      }
-      updateTranslations();
     });
 
     // Event for the share button: copy the chat title + ChatGPT/Claude link to clipboard
@@ -1416,11 +1442,10 @@
       // Add a colon and a space between title and link
       const shareText = chatTitle + ": " + chatLink;
       navigator.clipboard.writeText(shareText).then(() => {
-        const lang = localStorage.getItem('language') || 'en';
         // Create a small light gray message that appears and fades out slowly
         const notification = document.createElement("div");
         notification.id = "copy-notification";
-        notification.textContent = translations[lang].copyNotification;
+        notification.textContent = "Chat link copied to clipboard!";
         notification.style.position = "fixed";
         //notification.style.bottom = "20px"; // Show the message at the bottom
         notification.style.top = "60px"; // Show the message at the top
@@ -1445,8 +1470,7 @@
         }, 1000);
         }, 2000);
       }).catch(err => {
-        const lang = localStorage.getItem('language') || 'en';
-        console.error(translations[lang].copyError + ": " + err);
+        console.error("Error copying information: " + err);
       });
     });
     
